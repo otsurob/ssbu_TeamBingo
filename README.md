@@ -24,9 +24,10 @@ Echo (Go言語)
 - 基本的にはそれぞれの参加者が、ゲームで勝利したときに使用したキャラクターのマスを埋めてください。他の参加者の入力が終わったあとにページのリロードを行うと他の参加者の入力が反映されます。
 - ゲームが終了したら参加者のうちだれか1人が**必ず**"終了"ボタンで部屋を削除してください。"退出"ボタンは部屋を抜けるためのもので、部屋の削除は行いません。
 
-![TeamBingo1](https://github.com/otsurob/TeamBingo/assets/129499838/a6a2b4fe-7383-4c79-afe2-384caea62ff5)
+![TeamBingo1](https://github.com/otsurob/ssbu_TeamBingo/assets/129499838/5ecb40eb-8bb7-428c-be15-b71bbe97d398)
 
-![TeamBingo2](https://github.com/otsurob/TeamBingo/assets/129499838/a25c4756-5290-410a-98f2-58edd5bff113)
+![TeamBingo2](https://github.com/otsurob/ssbu_TeamBingo/assets/129499838/181a8303-9cf0-4546-9987-c7062832cf8d)
+
 
 
 https://team-bingo-client.vercel.app/
