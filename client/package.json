@@ -31,7 +31,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint --ext .jsx,.js,.tsx,.ts src/"
   },
   "eslintConfig": {
     "extends": [
@@ -52,6 +53,12 @@
     ]
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.4"
+    "@eslint/js": "^9.9.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.35.0",
+    "globals": "^15.9.0",
+    "prettier": "^3.3.3",
+    "tailwindcss": "^3.4.4",
+    "typescript-eslint": "^8.1.0"
   }
 }

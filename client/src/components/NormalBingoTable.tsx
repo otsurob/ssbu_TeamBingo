@@ -1,7 +1,7 @@
 import { Button, Flex, IconButton, Img, Spacer } from '@chakra-ui/react'
 import { ResponseBingo } from '../types'
 
-type SmallBingoProps = {
+type NormalBingoProps = {
   bingos: ResponseBingo[]
   leader: string
   changeStatusTeam: (locate: number, team: number) => void
@@ -10,24 +10,24 @@ type SmallBingoProps = {
   exitGame: () => void
 }
 
-export const SmallBingoTable = ({
+export const NormalBingoTable = ({
   bingos,
   changeStatusTeam,
   // changeStatusTeam2,
   deleteGame,
   exitGame,
-}: SmallBingoProps) => {
+}: NormalBingoProps) => {
   return (
-    <Flex flexWrap="wrap" flexDirection="column" marginTop={30}>
-      <Flex flexWrap="wrap" w="350px" flexDirection="row" marginLeft={30}>
+    <Flex flexWrap="wrap" flexDirection="row" marginTop={30}>
+      <Flex flexWrap="wrap" w="500px" flexDirection="row" marginLeft={30}>
         {bingos?.map((bingo) => (
           <div key={bingo.id}>
             {bingo.team === 1 && (
               <>
                 {bingo.status === 0 ? (
                   <IconButton
-                    h="70px"
-                    w="70px"
+                    h="100px"
+                    w="100px"
                     backgroundColor="white"
                     value={bingo.status}
                     onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
@@ -43,8 +43,8 @@ export const SmallBingoTable = ({
                   </IconButton>
                 ) : (
                   <IconButton
-                    h="70px"
-                    w="70px"
+                    h="100px"
+                    w="100px"
                     backgroundColor="red"
                     value={bingo.status}
                     onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
@@ -68,15 +68,15 @@ export const SmallBingoTable = ({
       <Button onClick={deleteGame}>終了</Button>
       <Button onClick={exitGame}>退出</Button>
       <Spacer />
-      <Flex flexWrap="wrap" w="350px" flexDirection="row" marginLeft={30}>
+      <Flex flexWrap="wrap" w="500px" flexDirection="row" marginLeft={30}>
         {bingos?.map((bingo) => (
           <div key={bingo.id}>
             {bingo.team === 2 && (
               <>
                 {bingo.status === 0 ? (
                   <IconButton
-                    h="70px"
-                    w="70px"
+                    h="100px"
+                    w="100px"
                     backgroundColor="white"
                     value={bingo.status}
                     onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
@@ -92,8 +92,8 @@ export const SmallBingoTable = ({
                   </IconButton>
                 ) : (
                   <IconButton
-                    h="70px"
-                    w="70px"
+                    h="100px"
+                    w="100px"
                     backgroundColor="red"
                     value={bingo.status}
                     onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
