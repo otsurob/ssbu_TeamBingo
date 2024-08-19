@@ -17,49 +17,32 @@ export const NormalBingoTable = ({
   deleteGame,
   exitGame,
 }: NormalBingoProps) => {
+  const NON_GOT_CELL = 0
+  // const GotCell=1
   return (
     <Flex flexWrap="wrap" flexDirection="row" marginTop={30}>
       <Flex flexWrap="wrap" w="500px" flexDirection="row" marginLeft={30}>
         {bingos?.map((bingo) => (
           <div key={bingo.id}>
             {bingo.team === 1 && (
-              <>
-                {bingo.status === 0 ? (
-                  <IconButton
-                    h="100px"
-                    w="100px"
-                    backgroundColor="white"
-                    value={bingo.status}
-                    onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                    aria-label="bingo cell"
-                    icon={
-                      <Img
-                        src={`./character_image/character_${bingo.character}.png`}
-                        alt={`${bingo.character}`}
-                      />
-                    }
-                  >
-                    {bingo.character}
-                  </IconButton>
-                ) : (
-                  <IconButton
-                    h="100px"
-                    w="100px"
-                    backgroundColor="red"
-                    value={bingo.status}
-                    onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                    aria-label="bingo cell"
-                    icon={
-                      <Img
-                        src={`./character_image/character_${bingo.character}.png`}
-                        alt={`${bingo.character}`}
-                      />
-                    }
-                  >
-                    {bingo.character}
-                  </IconButton>
-                )}
-              </>
+              <IconButton
+                h="100px"
+                w="100px"
+                backgroundColor={
+                  bingo.status === NON_GOT_CELL ? 'white' : 'red'
+                }
+                value={bingo.status}
+                onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
+                aria-label="bingo cell"
+                icon={
+                  <Img
+                    src={`./character_image/character_${bingo.character}.png`}
+                    alt={`${bingo.character}`}
+                  />
+                }
+              >
+                {bingo.character}
+              </IconButton>
             )}
           </div>
         ))}
@@ -72,43 +55,24 @@ export const NormalBingoTable = ({
         {bingos?.map((bingo) => (
           <div key={bingo.id}>
             {bingo.team === 2 && (
-              <>
-                {bingo.status === 0 ? (
-                  <IconButton
-                    h="100px"
-                    w="100px"
-                    backgroundColor="white"
-                    value={bingo.status}
-                    onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                    aria-label="bingo cell"
-                    icon={
-                      <Img
-                        src={`./character_image/character_${bingo.character}.png`}
-                        alt={`${bingo.character}`}
-                      />
-                    }
-                  >
-                    {bingo.character}
-                  </IconButton>
-                ) : (
-                  <IconButton
-                    h="100px"
-                    w="100px"
-                    backgroundColor="red"
-                    value={bingo.status}
-                    onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                    aria-label="bingo cell"
-                    icon={
-                      <Img
-                        src={`./character_image/character_${bingo.character}.png`}
-                        alt={`${bingo.character}`}
-                      />
-                    }
-                  >
-                    {bingo.character}
-                  </IconButton>
-                )}
-              </>
+              <IconButton
+                h="100px"
+                w="100px"
+                backgroundColor={
+                  bingo.status === NON_GOT_CELL ? 'white' : 'red'
+                }
+                value={bingo.status}
+                onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
+                aria-label="bingo cell"
+                icon={
+                  <Img
+                    src={`./character_image/character_${bingo.character}.png`}
+                    alt={`${bingo.character}`}
+                  />
+                }
+              >
+                {bingo.character}
+              </IconButton>
             )}
           </div>
         ))}
