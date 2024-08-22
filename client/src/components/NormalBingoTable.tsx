@@ -10,6 +10,8 @@ type NormalBingoProps = {
   exitGame: () => void
 }
 
+const NON_GOT_CELL = 0
+
 export const NormalBingoTable = ({
   bingos,
   changeStatusTeam,
@@ -17,8 +19,6 @@ export const NormalBingoTable = ({
   deleteGame,
   exitGame,
 }: NormalBingoProps) => {
-  const NON_GOT_CELL = 0
-  // const GotCell=1
   return (
     <Flex flexWrap="wrap" flexDirection="row" marginTop={30}>
       <Flex flexWrap="wrap" w="500px" flexDirection="row" marginLeft={30}>

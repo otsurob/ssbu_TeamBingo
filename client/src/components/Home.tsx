@@ -21,7 +21,7 @@ export default function Home() {
   const navigate = useNavigate()
   const [team, setTeam] = useState('1')
   let flag = false
-  const infList = []
+  // const infList = []
 
   const [name, setName] = useState('')
   const [room, setRoom] = useState('')
@@ -64,12 +64,12 @@ export default function Home() {
     await axios
       .post(`${process.env.REACT_APP_API_URL}/create`, cb1)
       .then((response) => {
-        infList.push(response)
+        // infList.push(response)
       })
     await axios
       .post(`${process.env.REACT_APP_API_URL}/create`, cb2)
       .then((response) => {
-        infList.push(response)
+        // infList.push(response)
       })
 
     navigate(`game?leader=1&room=${room}&team=${team}`)

@@ -10,6 +10,8 @@ type SmallBingoProps = {
   exitGame: () => void
 }
 
+const NON_GOT_CELL = 0
+
 export const SmallBingoTable = ({
   bingos,
   changeStatusTeam,
@@ -17,7 +19,6 @@ export const SmallBingoTable = ({
   deleteGame,
   exitGame,
 }: SmallBingoProps) => {
-  const NON_GOT_CELL = 0
   return (
     <Flex flexWrap="wrap" flexDirection="column" marginTop={30}>
       <Flex flexWrap="wrap" w="350px" flexDirection="row" marginLeft={30}>

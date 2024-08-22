@@ -7,7 +7,7 @@ import { SmallBingoTable } from './SmallBingoTable'
 import { NormalBingoTable } from './NormalBingoTable'
 
 export default function Game() {
-  console.log('rendered')
+  // console.log('rendered')
   const [bingos, setBingos] = useState<ResponseBingo[]>([])
   useEffect(() => {
     axios
