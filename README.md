@@ -41,4 +41,4 @@
 
 ![TeamBingo2](https://github.com/otsurob/ssbu_TeamBingo/assets/129499838/181a8303-9cf0-4546-9987-c7062832cf8d)
 
-https://team-bingo-client.vercel.app/
+https://team-bingo-client-blond.vercel.app/
