@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func NewRouter(tc controller.ITaskController) *echo.Echo {
+func NewRouter(tc controller.ITaskController, pc controller.IPlayerController) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		//アクセスを許可するフロントエンドのドメインを追加
@@ -27,5 +27,9 @@ func NewRouter(tc controller.ITaskController) *echo.Echo {
 	e.POST("/create", tc.CreateTask)
 	e.PUT("/update", tc.UpdateTask)
 	e.DELETE("/:room", tc.DeleteTask)
+
+	e.GET("/player", pc.GetTeamPlayers)
+	e.POST("/joinPlayer", pc.CreatePlayer)
+	e.DELETE("/leavePlayer/:room", pc.DeletePlayer)
 	return e
 }

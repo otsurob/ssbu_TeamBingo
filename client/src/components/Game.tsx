@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ResponseBingo } from '../types'
+import { ResponseBingo, ResponsePlayer } from '../types'
 import { useMedia } from 'use-media'
 import { SmallBingoTable } from './SmallBingoTable'
 import { NormalBingoTable } from './NormalBingoTable'
@@ -9,6 +9,8 @@ import { NormalBingoTable } from './NormalBingoTable'
 export default function Game() {
   // console.log('rendered')
   const [bingos, setBingos] = useState<ResponseBingo[]>([])
+  const [team1Players, setTeam1Players] = useState<ResponsePlayer[]>([])
+  const [team2Players, setTeam2Players] = useState<ResponsePlayer[]>([])
   useEffect(() => {
     axios
       .get<
@@ -16,6 +18,20 @@ export default function Game() {
       >(`${process.env.REACT_APP_API_URL}/bingo?room=${room}`)
       .then((res) => {
         setBingos(res.data)
+      })
+    axios
+      .get<
+        ResponsePlayer[]
+      >(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=1`)
+      .then((res) => {
+        setTeam1Players(res.data)
+      })
+    axios
+      .get<
+        ResponsePlayer[]
+      >(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=2`)
+      .then((res) => {
+        setTeam2Players(res.data)
       })
   }, [])
 
@@ -77,6 +93,29 @@ export default function Game() {
           }
           navigate('/')
         })
+      let isTeam1Existed = false
+      let isTeam2Existed = false
+      await axios
+        .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=1`)
+        .then(async (res) => {
+          if (res.data.length !== 0) {
+            isTeam1Existed = true
+          }
+        })
+      await axios
+        .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=2`)
+        .then(async (res) => {
+          if (res.data.length !== 0) {
+            isTeam2Existed = true
+          }
+        })
+      if (isTeam1Existed || isTeam2Existed) {
+        console.log('wow')
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL}/leavePlayer/${room}`,
+        )
+      }
+      navigate('/')
     }
   }
 
@@ -90,62 +129,10 @@ export default function Game() {
     <div>
       <>
         {isWide ? (
-          //↓もともと書いてたやつ。一応コメントアウトで残してある
-          // <Flex flexWrap="wrap" flexDirection="row" marginTop={30}>
-          //   <Flex flexWrap="wrap" w="500px" flexDirection="row" marginLeft={30}>
-          //     {bingos.map((bingo) => (
-          //       <div key={bingo.id}>
-          //         {bingo.team === 1 && (
-          //           <>
-          //             {bingo.status === 0 ? (
-          //               <BingoTable
-          //                 bingo={bingo}
-          //                 changeStatus={changeStatusTeam}
-          //               />
-          //             ) : (
-          //               <BingoTable
-          //                 bingo={bingo}
-          //                 changeStatus={changeStatusTeam}
-          //               />
-          //             )}
-          //           </>
-          //         )}
-          //       </div>
-          //     ))}
-          //   </Flex>
-          //   <Spacer />
-          //   <Button onClick={deleteGame}>終了</Button>
-          //   <Button onClick={exitGame}>退出</Button>
-          //   <Spacer />
-          //   <Flex
-          //     flexWrap="wrap"
-          //     w="500px"
-          //     flexDirection="row"
-          //     marginRight={30}
-          //   >
-          //     {bingos?.map((bingo) => (
-          //       <div key={bingo.id}>
-          //         {bingo.team === 2 && (
-          //           <>
-          //             {bingo.status === 0 ? (
-          //               <BingoTable
-          //                 bingo={bingo}
-          //                 changeStatus={changeStatusTeam}
-          //               />
-          //             ) : (
-          //               <BingoTable
-          //                 bingo={bingo}
-          //                 changeStatus={changeStatusTeam}
-          //               />
-          //             )}
-          //           </>
-          //         )}
-          //       </div>
-          //     ))}
-          //   </Flex>
-          // </Flex>
           <NormalBingoTable
             bingos={bingos}
+            team1Players={team1Players}
+            team2Players={team2Players}
             leader={leader}
             changeStatusTeam={changeStatusTeam}
             // changeStatusTeam2={changeStatusTeam2}
@@ -155,6 +142,8 @@ export default function Game() {
         ) : (
           <SmallBingoTable
             bingos={bingos}
+            team1Players={team1Players}
+            team2Players={team2Players}
             leader={leader}
             changeStatusTeam={changeStatusTeam}
             // changeStatusTeam2={changeStatusTeam2}

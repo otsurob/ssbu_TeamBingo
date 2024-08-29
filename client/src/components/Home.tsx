@@ -19,8 +19,8 @@ import { useNavigate } from 'react-router-dom'
 export default function Home() {
   const toast = useToast()
   const navigate = useNavigate()
-  const [team, setTeam] = useState('1')
-  let flag = false
+  const [team, setTeam] = useState('0')
+  let isRoomExisted = false
   // const infList = []
 
   const [name, setName] = useState('')
@@ -29,7 +29,7 @@ export default function Home() {
   const makeRoom = async () => {
     if (name == '' || room == '') {
       toast({
-        title: '名前と合言葉を入力してください',
+        title: '名前と部屋IDを入力してください',
         status: 'error',
         isClosable: true,
         position: 'top',
@@ -54,12 +54,40 @@ export default function Home() {
             isClosable: true,
             position: 'top',
           })
-          flag = true
+          isRoomExisted = true
+        } else {
+          isRoomExisted = false
         }
       })
-    if (flag) {
-      flag = false
+    if (isRoomExisted) {
       return
+    }
+    // if (team == '0') {
+    //   let numberOfTeam1 = 0
+    //   let numberOfTeam2 = 0
+    //   await axios
+    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=1`)
+    //     .then(async (res) => {
+    //       numberOfTeam1 = res.data.length
+    //     })
+    //   await axios
+    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=2`)
+    //     .then(async (res) => {
+    //       numberOfTeam2 = res.data.length
+    //     })
+    //   if (numberOfTeam1 > numberOfTeam2) {
+    //     setTeam('2')
+    //   } else if (numberOfTeam1 < numberOfTeam2) {
+    //     setTeam('1')
+    //   } else {
+    //     let random = Math.floor(Math.random() * 2) + 1
+    //     setTeam(String(random))
+    //   }
+    // }
+    const player = {
+      room: room,
+      name: name,
+      team: Number(team),
     }
     await axios
       .post(`${process.env.REACT_APP_API_URL}/create`, cb1)
@@ -71,14 +99,14 @@ export default function Home() {
       .then((response) => {
         // infList.push(response)
       })
-
+    await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
     navigate(`game?leader=1&room=${room}&team=${team}`)
   }
 
   const enterRoom = async () => {
     if (name == '' || room == '') {
       toast({
-        title: '名前と合言葉を入力してください',
+        title: '名前と部屋IDを入力してください',
         status: 'error',
         isClosable: true,
         position: 'top',
@@ -95,13 +123,45 @@ export default function Home() {
             isClosable: true,
             position: 'top',
           })
-          flag = true
+          isRoomExisted = false
+        } else {
+          isRoomExisted = true
         }
       })
-    if (flag) {
-      flag = false
+    if (!isRoomExisted) {
       return
     }
+    const player = {
+      room: room,
+      name: name,
+      team: Number(team),
+    }
+    // if (team == '0') {
+    //   let numberOfTeam1 = 0
+    //   let numberOfTeam2 = 0
+    //   await axios
+    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=1`)
+    //     .then(async (res) => {
+    //       numberOfTeam1 = res.data.length
+    //     })
+    //   await axios
+    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=2`)
+    //     .then(async (res) => {
+    //       numberOfTeam2 = res.data.length
+    //     })
+
+    //   if (numberOfTeam1 > numberOfTeam2) {
+    //     setTeam('2')
+    //   } else if (numberOfTeam1 < numberOfTeam2) {
+    //     setTeam('1')
+    //   } else {
+    //     let random = Math.floor(Math.random() * 2) + 1
+    //     console.log(random)
+    //     player.team = random
+    //     setTeam(String(random))
+    //   }
+    // }
+    await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
     navigate(`game?leader=0&room=${room}&team=${team}`)
   }
 
@@ -118,7 +178,7 @@ export default function Home() {
             />
           </FormControl>
           <FormControl mt={4}>
-            <FormLabel>合言葉</FormLabel>
+            <FormLabel>部屋ID</FormLabel>
             <Input
               type="text"
               value={room}
@@ -129,6 +189,8 @@ export default function Home() {
             <Stack direction="row">
               <Radio value="1">Team1</Radio>
               <Radio value="2">Team2</Radio>
+              {/* <Radio value="5">ランダム</Radio> */}
+              <Radio value="3">観戦として参加</Radio>
             </Stack>
           </RadioGroup>
           <Center mt={8}>

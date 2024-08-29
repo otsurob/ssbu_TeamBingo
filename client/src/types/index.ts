@@ -16,3 +16,9 @@ export type Info = {
   character: number
   status: number
 }
+
+export type ResponsePlayer = {
+  id:number
+  name:string
+  team:string
+}

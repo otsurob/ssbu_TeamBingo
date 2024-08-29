@@ -12,5 +12,5 @@ func main() {
 	defer db.CloseDB(dbConn)
 	//引数にはデータベースに反映させたいモデル構造を渡す
 	// dbConn.AutoMigrate(&model.User{}, &model.Task{})
-	dbConn.AutoMigrate(&model.Bingo{})
+	dbConn.AutoMigrate(&model.Bingo{}, &model.Player{})
 }

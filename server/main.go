@@ -13,13 +13,13 @@ func main() {
 	db := db.NewDB()
 	// userValidator := validator.NewUserValidator()
 	taskValidator := validator.NewTaskValidator()
-	// userRepository := repository.NewUserRepository(db)
+	playerRepository := repository.NewPlayerRepository(db)
 	taskRepository := repository.NewTaskRepository(db)
-	// userUsecase := usecase.NewUserUsecase(userRepository, userValidator)
+	playerUsecase := usecase.NewPlayerUsecase(playerRepository)
 	taskUsecase := usecase.NewTaskUsecase(taskRepository, taskValidator)
-	// userController := controller.NewUserController(userUsecase)
+	playerController := controller.NewPlayerController(playerUsecase)
 	taskController := controller.NewTaskController(taskUsecase)
-	e := router.NewRouter(taskController)
+	e := router.NewRouter(taskController, playerController)
 	//echoのStart関数でサーバーを立ち上げる　今回はポート番号8080　エラーが起きたらlogに表示して強制終了
 	e.Logger.Fatal(e.Start(":8080"))
 }
