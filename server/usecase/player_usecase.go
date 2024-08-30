@@ -10,6 +10,7 @@ type IPlayerUsecase interface {
 	CreatePlayer(player model.Player) (model.PlayerResponse, error)
 	// UpdatePlayer(player model.Player, room string, team uint, locate uint) (model.PlayerResponse, error)
 	DeletePlayer(room string) error
+	DeleteOnePlayer(room string, name string, team uint) error
 }
 
 type playerUsecase struct {
@@ -76,6 +77,13 @@ func (pu *playerUsecase) CreatePlayer(player model.Player) (model.PlayerResponse
 
 func (pu *playerUsecase) DeletePlayer(room string) error {
 	if err := pu.tr.DeletePlayer(room); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (pu *playerUsecase) DeleteOnePlayer(room string, name string, team uint) error {
+	if err := pu.tr.DeleteOnePlayer(room, name, team); err != nil {
 		return err
 	}
 	return nil

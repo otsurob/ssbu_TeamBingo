@@ -100,7 +100,7 @@ export default function Home() {
         // infList.push(response)
       })
     await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
-    navigate(`game?leader=1&room=${room}&team=${team}`)
+    navigate(`game?room=${room}&name=${name}&team=${team}`)
   }
 
   const enterRoom = async () => {
@@ -162,7 +162,7 @@ export default function Home() {
     //   }
     // }
     await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
-    navigate(`game?leader=0&room=${room}&team=${team}`)
+    navigate(`game?room=${room}&name=${name}&team=${team}`)
   }
 
   return (

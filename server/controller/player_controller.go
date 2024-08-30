@@ -14,6 +14,7 @@ type IPlayerController interface {
 	CreatePlayer(c echo.Context) error
 	// UpdatePlayer(c echo.Context) error
 	DeletePlayer(c echo.Context) error
+	DeleteOnePlayer(c echo.Context) error
 }
 
 type playerController struct {
@@ -88,6 +89,19 @@ func (pc *playerController) DeletePlayer(c echo.Context) error {
 	room := c.Param("room")
 
 	err := pc.tu.DeletePlayer(room)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (pc *playerController) DeleteOnePlayer(c echo.Context) error {
+	room := c.QueryParam("room")
+	name := c.QueryParam("name")
+	team := c.QueryParam("team")
+	teamNumber, _ := strconv.Atoi(team)
+
+	err := pc.tu.DeleteOnePlayer(room, name, uint(teamNumber))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

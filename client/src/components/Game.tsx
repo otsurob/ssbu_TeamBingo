@@ -37,13 +37,14 @@ export default function Game() {
 
   const isWide = useMedia({ minWidth: '1000px' })
   const [searchParams] = useSearchParams()
-  const leader = searchParams.get('leader')
+  // const leader = searchParams.get('leader')
   const room = searchParams.get('room')
-  // const myTeam = searchParams.get('team')
+  const team = searchParams.get('team')
+  const name = searchParams.get('name')
 
   const navigate = useNavigate()
 
-  if (!room || !leader) {
+  if (!room || !name) {
     navigate('/')
     return null
   }
@@ -121,6 +122,17 @@ export default function Game() {
 
   const exitGame = async () => {
     if (window.confirm('部屋は残したまま退出しますか？')) {
+      await axios
+        .get(
+          `${process.env.REACT_APP_API_URL}/player?room=${room}&team=${team}`,
+        )
+        .then(async (res) => {
+          if (res.data.length !== 0) {
+            await axios.delete(
+              `${process.env.REACT_APP_API_URL}/leaveOnePlayer?room=${room}&name=${name}&team=${team}`,
+            )
+          }
+        })
       navigate('/')
     }
   }
@@ -133,7 +145,7 @@ export default function Game() {
             bingos={bingos}
             team1Players={team1Players}
             team2Players={team2Players}
-            leader={leader}
+            // leader={leader}
             changeStatusTeam={changeStatusTeam}
             // changeStatusTeam2={changeStatusTeam2}
             deleteGame={deleteGame}
@@ -144,7 +156,7 @@ export default function Game() {
             bingos={bingos}
             team1Players={team1Players}
             team2Players={team2Players}
-            leader={leader}
+            // leader={leader}
             changeStatusTeam={changeStatusTeam}
             // changeStatusTeam2={changeStatusTeam2}
             deleteGame={deleteGame}

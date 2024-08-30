@@ -13,7 +13,7 @@ type NormalBingoProps = {
   bingos: ResponseBingo[]
   team1Players: ResponsePlayer[]
   team2Players: ResponsePlayer[]
-  leader: string
+  // leader: string
   changeStatusTeam: (locate: number, team: number) => void
   // changeStatusTeam2: (locate: number) => void
   deleteGame: () => void

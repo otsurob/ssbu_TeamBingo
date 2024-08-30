@@ -31,5 +31,6 @@ func NewRouter(tc controller.ITaskController, pc controller.IPlayerController) *
 	e.GET("/player", pc.GetTeamPlayers)
 	e.POST("/joinPlayer", pc.CreatePlayer)
 	e.DELETE("/leavePlayer/:room", pc.DeletePlayer)
+	e.DELETE("/leaveOnePlayer", pc.DeleteOnePlayer)
 	return e
 }

@@ -12,6 +12,7 @@ type IPlayerRepository interface {
 	CreatePlayer(player *model.Player) error
 	// UpdatePlayer(player *model.Player, room string, team uint, locate uint) error
 	DeletePlayer(room string) error
+	DeleteOnePlayer(room string, name string, team uint) error
 }
 
 type playerRepository struct {
@@ -51,6 +52,18 @@ func (pr *playerRepository) CreatePlayer(player *model.Player) error {
 func (pr *playerRepository) DeletePlayer(room string) error {
 	// result := pr.db.Where("id=? AND user_id=?", playerId, userId).Delete(&model.Player{})
 	result := pr.db.Where("room=?", room).Delete(&model.Player{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected < 1 {
+		return fmt.Errorf("object does not exist")
+	}
+	return nil
+}
+
+func (pr *playerRepository) DeleteOnePlayer(room string, name string, team uint) error {
+	// result := pr.db.Where("id=? AND user_id=?", playerId, userId).Delete(&model.Player{})
+	result := pr.db.Where("room=? AND name=? AND team=?", room, name, team).Delete(&model.Player{})
 	if result.Error != nil {
 		return result.Error
 	}
