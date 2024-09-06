@@ -30,10 +30,8 @@ func (tu *taskUsecase) GetAllTasks(room string) ([]model.BingoResponse, error) {
 	//クライアントへのレスポンス用
 	resTasks := []model.BingoResponse{}
 	for _, v := range tasks {
-		// t := model.BingoResponse(v)
 		t := model.BingoResponse{
-			ID: v.ID,
-			// Room:      v.Room,
+			ID:        v.ID,
 			Team:      v.Team,
 			Locate:    v.Locate,
 			Status:    v.Status,
@@ -54,8 +52,7 @@ func (tu *taskUsecase) CreateTask(task model.Bingo) (model.BingoResponse, error)
 		return model.BingoResponse{}, err
 	}
 	resTask := model.BingoResponse{
-		ID: task.ID,
-		// Room:      task.Room,
+		ID:        task.ID,
 		Team:      task.Team,
 		Locate:    task.Locate,
 		Status:    task.Status,
@@ -65,15 +62,11 @@ func (tu *taskUsecase) CreateTask(task model.Bingo) (model.BingoResponse, error)
 }
 
 func (tu *taskUsecase) UpdateTask(task model.Bingo, room string, team uint, locate uint) (model.BingoResponse, error) {
-	// if err := tu.tv.TaskValidate(task); err != nil {
-	// 	return model.TaskResponse{}, err
-	// }
 	if err := tu.tr.UpdateTask(&task, room, team, locate); err != nil {
 		return model.BingoResponse{}, err
 	}
 	resTask := model.BingoResponse{
-		ID: task.ID,
-		// Room:      task.Room,
+		ID:        task.ID,
 		Team:      task.Team,
 		Locate:    task.Locate,
 		Status:    task.Status,

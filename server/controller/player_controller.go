@@ -12,7 +12,6 @@ import (
 type IPlayerController interface {
 	GetTeamPlayers(c echo.Context) error
 	CreatePlayer(c echo.Context) error
-	// UpdatePlayer(c echo.Context) error
 	DeletePlayer(c echo.Context) error
 	DeleteOnePlayer(c echo.Context) error
 }
@@ -38,8 +37,6 @@ func (pc *playerController) GetTeamPlayers(c echo.Context) error {
 
 func (pc *playerController) CreatePlayer(c echo.Context) error {
 
-	// var playerResList []model.PlayerResponse
-
 	player := model.Player{}
 	if err := c.Bind(&player); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -48,42 +45,9 @@ func (pc *playerController) CreatePlayer(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	// for i, v := range characterNumber {
-	// 	player.Locate = uint(i)
-	// 	player.Character = uint(v)
-	// 	if i == 12 {
-	// 		player.Status = 1
-	// 	} else {
-	// 		player.Status = 0
-	// 	}
-	// 	playerRes, err := pc.tu.CreatePlayer(player)
-	// 	if err != nil {
-	// 		return c.JSON(http.StatusInternalServerError, err.Error())
-	// 	}
-	// 	// fmt.Println("called create!")
-	// 	playerResList = append(playerResList, playerRes)
-	// }
 
 	return c.JSON(http.StatusCreated, playerRes)
 }
-
-// func (pc *playerController) UpdatePlayer(c echo.Context) error {
-// 	room := c.QueryParam("room")
-// 	team := c.QueryParam("team")
-// 	locate := c.QueryParam("locate")
-// 	teamId, _ := strconv.Atoi(team)
-// 	locateId, _ := strconv.Atoi(locate)
-
-// 	player := model.Player{}
-// 	if err := c.Bind(&player); err != nil {
-// 		return c.JSON(http.StatusBadRequest, err.Error())
-// 	}
-// 	playerRes, err := pc.tu.UpdatePlayer(player, room, uint(teamId), uint(locateId))
-// 	if err != nil {
-// 		return c.JSON(http.StatusInternalServerError, err.Error())
-// 	}
-// 	return c.JSON(http.StatusOK, playerRes)
-// }
 
 func (pc *playerController) DeletePlayer(c echo.Context) error {
 	room := c.Param("room")

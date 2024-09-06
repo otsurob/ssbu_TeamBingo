@@ -10,8 +10,7 @@ type Bingo struct {
 }
 
 type BingoResponse struct {
-	ID uint `json:"id" gorm:"primaryKey"`
-	// Room      string `json:"room" gorm:"not null"`
+	ID        uint `json:"id" gorm:"primaryKey"`
 	Team      uint `json:"team" gorm:"not null"`
 	Locate    uint `json:"locate" gorm:"not null"`
 	Status    uint `json:"status" gorm:"not null"`

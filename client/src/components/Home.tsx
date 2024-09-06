@@ -21,7 +21,6 @@ export default function Home() {
   const navigate = useNavigate()
   const [team, setTeam] = useState('0')
   let isRoomExisted = false
-  // const infList = []
 
   const [name, setName] = useState('')
   const [room, setRoom] = useState('')
@@ -62,43 +61,16 @@ export default function Home() {
     if (isRoomExisted) {
       return
     }
-    // if (team == '0') {
-    //   let numberOfTeam1 = 0
-    //   let numberOfTeam2 = 0
-    //   await axios
-    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=1`)
-    //     .then(async (res) => {
-    //       numberOfTeam1 = res.data.length
-    //     })
-    //   await axios
-    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=2`)
-    //     .then(async (res) => {
-    //       numberOfTeam2 = res.data.length
-    //     })
-    //   if (numberOfTeam1 > numberOfTeam2) {
-    //     setTeam('2')
-    //   } else if (numberOfTeam1 < numberOfTeam2) {
-    //     setTeam('1')
-    //   } else {
-    //     let random = Math.floor(Math.random() * 2) + 1
-    //     setTeam(String(random))
-    //   }
-    // }
+
     const player = {
       room: room,
       name: name,
       team: Number(team),
     }
-    await axios
-      .post(`${process.env.REACT_APP_API_URL}/create`, cb1)
-      .then((response) => {
-        // infList.push(response)
-      })
-    await axios
-      .post(`${process.env.REACT_APP_API_URL}/create`, cb2)
-      .then((response) => {
-        // infList.push(response)
-      })
+    await axios.post(`${process.env.REACT_APP_API_URL}/create`, cb1)
+
+    await axios.post(`${process.env.REACT_APP_API_URL}/create`, cb2)
+
     await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
     navigate(`game?room=${room}&name=${name}&team=${team}`)
   }
@@ -136,31 +108,7 @@ export default function Home() {
       name: name,
       team: Number(team),
     }
-    // if (team == '0') {
-    //   let numberOfTeam1 = 0
-    //   let numberOfTeam2 = 0
-    //   await axios
-    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=1`)
-    //     .then(async (res) => {
-    //       numberOfTeam1 = res.data.length
-    //     })
-    //   await axios
-    //     .get(`${process.env.REACT_APP_API_URL}/player?room=${room}&team=2`)
-    //     .then(async (res) => {
-    //       numberOfTeam2 = res.data.length
-    //     })
 
-    //   if (numberOfTeam1 > numberOfTeam2) {
-    //     setTeam('2')
-    //   } else if (numberOfTeam1 < numberOfTeam2) {
-    //     setTeam('1')
-    //   } else {
-    //     let random = Math.floor(Math.random() * 2) + 1
-    //     console.log(random)
-    //     player.team = random
-    //     setTeam(String(random))
-    //   }
-    // }
     await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
     navigate(`game?room=${room}&name=${name}&team=${team}`)
   }

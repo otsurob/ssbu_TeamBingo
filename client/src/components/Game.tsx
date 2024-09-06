@@ -7,7 +7,6 @@ import { SmallBingoTable } from './SmallBingoTable'
 import { NormalBingoTable } from './NormalBingoTable'
 
 export default function Game() {
-  // console.log('rendered')
   const [bingos, setBingos] = useState<ResponseBingo[]>([])
   const [team1Players, setTeam1Players] = useState<ResponsePlayer[]>([])
   const [team2Players, setTeam2Players] = useState<ResponsePlayer[]>([])
@@ -37,7 +36,6 @@ export default function Game() {
 
   const isWide = useMedia({ minWidth: '1000px' })
   const [searchParams] = useSearchParams()
-  // const leader = searchParams.get('leader')
   const room = searchParams.get('room')
   const team = searchParams.get('team')
   const name = searchParams.get('name')
@@ -66,23 +64,6 @@ export default function Game() {
       setBingos(tempBingos)
     }
   }
-
-  // const changeStatusTeam2 = (locate: number) => {
-  //   if (window.confirm('状態を更新しますか？')) {
-  //     const tempBingos = bingos.concat()
-  //     const changedStatusNumber = tempBingos[locate + 25].status ^ 1
-  //     tempBingos[locate + 25].status = changedStatusNumber
-  //     const updateElement = {
-  //       status: changedStatusNumber,
-  //     }
-  //     axios.put(
-  //       `${process.env.REACT_APP_API_URL}/update?room=${room}&team=2&locate=${locate}`,
-  //       updateElement,
-  //     )
-  //     console.log(tempBingos)
-  //     setBingos(tempBingos)
-  //   }
-  // }
 
   const deleteGame = async () => {
     if (window.confirm('部屋を解散しますか？')) {
@@ -145,9 +126,7 @@ export default function Game() {
             bingos={bingos}
             team1Players={team1Players}
             team2Players={team2Players}
-            // leader={leader}
             changeStatusTeam={changeStatusTeam}
-            // changeStatusTeam2={changeStatusTeam2}
             deleteGame={deleteGame}
             exitGame={exitGame}
           />
@@ -156,9 +135,7 @@ export default function Game() {
             bingos={bingos}
             team1Players={team1Players}
             team2Players={team2Players}
-            // leader={leader}
             changeStatusTeam={changeStatusTeam}
-            // changeStatusTeam2={changeStatusTeam2}
             deleteGame={deleteGame}
             exitGame={exitGame}
           />

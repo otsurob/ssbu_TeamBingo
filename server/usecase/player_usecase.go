@@ -8,7 +8,6 @@ import (
 type IPlayerUsecase interface {
 	GetTeamPlayers(room string, team uint) ([]model.PlayerResponse, error)
 	CreatePlayer(player model.Player) (model.PlayerResponse, error)
-	// UpdatePlayer(player model.Player, room string, team uint, locate uint) (model.PlayerResponse, error)
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string, team uint) error
 }
@@ -29,7 +28,6 @@ func (pu *playerUsecase) GetTeamPlayers(room string, team uint) ([]model.PlayerR
 	//クライアントへのレスポンス用
 	resPlayers := []model.PlayerResponse{}
 	for _, v := range players {
-		// t := model.PlayerResponse(v)
 		t := model.PlayerResponse{
 			ID:   v.ID,
 			Name: v.Name,
@@ -41,11 +39,7 @@ func (pu *playerUsecase) GetTeamPlayers(room string, team uint) ([]model.PlayerR
 }
 
 func (pu *playerUsecase) CreatePlayer(player model.Player) (model.PlayerResponse, error) {
-	//バリデーションのチェック
-	// if err := pu.tv.PlayerValidate(player); err != nil {
-	// 	return model.PlayerResponse{}, err
-	// }
-	//引数で渡したアドレスの指し示す値が書き換わっている(&playerの話)
+
 	if err := pu.tr.CreatePlayer(&player); err != nil {
 		return model.PlayerResponse{}, err
 	}
@@ -56,24 +50,6 @@ func (pu *playerUsecase) CreatePlayer(player model.Player) (model.PlayerResponse
 	}
 	return resPlayer, nil
 }
-
-// func (pu *playerUsecase) UpdatePlayer(player model.Player, room string, team uint, locate uint) (model.PlayerResponse, error) {
-// 	// if err := pu.tv.PlayerValidate(player); err != nil {
-// 	// 	return model.PlayerResponse{}, err
-// 	// }
-// 	if err := pu.tr.UpdatePlayer(&player, room, team, locate); err != nil {
-// 		return model.PlayerResponse{}, err
-// 	}
-// 	resPlayer := model.PlayerResponse{
-// 		ID: player.ID,
-// 		// Room:      player.Room,
-// 		Team:      player.Team,
-// 		Locate:    player.Locate,
-// 		Status:    player.Status,
-// 		Character: player.Character,
-// 	}
-// 	return resPlayer, nil
-// }
 
 func (pu *playerUsecase) DeletePlayer(room string) error {
 	if err := pu.tr.DeletePlayer(room); err != nil {

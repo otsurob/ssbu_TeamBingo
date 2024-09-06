@@ -13,9 +13,7 @@ type SmallBingoProps = {
   bingos: ResponseBingo[]
   team1Players: ResponsePlayer[]
   team2Players: ResponsePlayer[]
-  // leader: string
   changeStatusTeam: (locate: number, team: number) => void
-  // changeStatusTeam2: (locate: number) => void
   deleteGame: () => void
   exitGame: () => void
 }
@@ -27,7 +25,6 @@ export const SmallBingoTable = ({
   team1Players,
   team2Players,
   changeStatusTeam,
-  // changeStatusTeam2,
   deleteGame,
   exitGame,
 }: SmallBingoProps) => {
@@ -35,7 +32,6 @@ export const SmallBingoTable = ({
     <Flex flexWrap="wrap" flexDirection="column" marginTop={30}>
       <Flex flexWrap="wrap" w="350px" flexDirection="row">
         {team1Players?.map((player) => (
-          // <div key={player.id}>{player.name}</div>
           <Center w="175px" h="10px" key={player.id} padding="15px">
             <Text fontSize="md">{player.name}</Text>
           </Center>
@@ -73,7 +69,6 @@ export const SmallBingoTable = ({
       <Spacer />
       <Flex flexWrap="wrap" w="350px" flexDirection="row" marginTop="5px">
         {team2Players?.map((player) => (
-          // <div key={player.id}>{player.name}</div>
           <Center w="175px" h="10px" key={player.id} padding="15px">
             <Text fontSize="md">{player.name}</Text>
           </Center>

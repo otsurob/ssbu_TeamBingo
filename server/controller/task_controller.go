@@ -63,7 +63,6 @@ func (tc *taskController) CreateTask(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		// fmt.Println("called create!")
 		taskResList = append(taskResList, taskRes)
 	}
 
