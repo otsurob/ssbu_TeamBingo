@@ -24,7 +24,6 @@ func NewTaskRepository(db *gorm.DB) ITaskRepository {
 }
 
 func (tr *taskRepository) GetAllTasks(tasks *[]model.Bingo, room string) error {
-	// if err := tr.db.Joins("User").Where("user_id=?", userId).Order("created_at").Find(tasks).Error; err != nil {
 	if err := tr.db.Where("room=?", room).Order("team").Order("locate").Find(tasks).Error; err != nil {
 		return err
 	}
@@ -50,7 +49,6 @@ func (tr *taskRepository) UpdateTask(task *model.Bingo, room string, team uint, 
 }
 
 func (tr *taskRepository) DeleteTask(room string) error {
-	// result := tr.db.Where("id=? AND user_id=?", taskId, userId).Delete(&model.Task{})
 	result := tr.db.Where("room=?", room).Delete(&model.Bingo{})
 	if result.Error != nil {
 		return result.Error
