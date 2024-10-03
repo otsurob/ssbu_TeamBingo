@@ -41,4 +41,4 @@
 
 ![TeamBingo3](https://github.com/user-attachments/assets/1f812571-4f22-4fd2-b5fc-08aca3c34ca9)
 
-https://team-bingo-client-blond.vercel.app/
+https://team-bingo-client.vercel.app/
