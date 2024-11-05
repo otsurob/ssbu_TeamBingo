@@ -11,15 +11,26 @@ import {
   RadioGroup,
   Radio,
   Stack,
+  Modal,
+  useDisclosure,
+  ModalOverlay,
+  ModalContent,
+  ModalBody,
 } from '@chakra-ui/react'
 import axios from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { RuleExplanation } from './RuleExplanation'
+// import { Modal } from '@chakra-ui/react'
+// import { Modal } from './Modal'
 
 export default function Home() {
   const toast = useToast()
   const navigate = useNavigate()
   const [team, setTeam] = useState('0')
+  // const [isOpen, setIsOpen] = useState(false);
+  // const [isClose, setIsClose] = useState(false);
+  const {isOpen, onOpen, onClose} = useDisclosure();
   let isRoomExisted = false
 
   const [name, setName] = useState('')
@@ -113,10 +124,23 @@ export default function Home() {
     navigate(`game?room=${room}&name=${name}&team=${team}`)
   }
 
+  // const displayHelp = () => {
+  //   setIsOpen(true);
+  // }
+
   return (
     <Container pt={20}>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody>
+            <RuleExplanation></RuleExplanation>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
       <Card>
         <CardBody>
+          <Button marginLeft="auto" display="block" rounded="full" colorScheme="teal" size="xs" onClick={onOpen}>?</Button>
           <FormControl>
             <FormLabel>名前</FormLabel>
             <Input
