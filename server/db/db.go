@@ -10,13 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// const GO_ENV = "dev"
-
-// 実行時に"GO_ENV=dev"として、先に指定して実行する必要がある
 func NewDB() *gorm.DB {
-	//環境変数が"dev"(develop)の場合、.envの内容を読み込み
 	if os.Getenv("GO_ENV") == "dev" {
-		// if GO_ENV == "dev" {
 		err := godotenv.Load()
 		if err != nil {
 			log.Fatalln(err)

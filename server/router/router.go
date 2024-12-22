@@ -21,8 +21,6 @@ func NewRouter(tc controller.ITaskController, pc controller.IPlayerController) *
 		//クッキーの送受信を可能にするための記述
 		AllowCredentials: true,
 	}))
-	//作成したエコーのインスタンスに対してエンドポイントを追加していく
-	//例えば、signupのエンドポイントにリクエストがあった場合はSignUpメソッドを呼び出す
 	e.GET("/bingo", tc.GetAllTasks)
 	e.POST("/create", tc.CreateTask)
 	e.PUT("/update", tc.UpdateTask)

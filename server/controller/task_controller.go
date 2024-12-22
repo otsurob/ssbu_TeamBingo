@@ -35,6 +35,10 @@ func (tc *taskController) GetAllTasks(c echo.Context) error {
 }
 
 func (tc *taskController) CreateTask(c echo.Context) error {
+	// ビンゴ表の中心のインデックス
+	const BINGO_CENTER = 12
+
+	// 重複のないように25個分のキャラクター識別用数値を生成
 	var check [90]bool
 	var characterNumber []int
 	for len(characterNumber) < 25 {
@@ -54,7 +58,8 @@ func (tc *taskController) CreateTask(c echo.Context) error {
 	for i, v := range characterNumber {
 		task.Locate = uint(i)
 		task.Character = uint(v)
-		if i == 12 {
+		// ビンゴの中心は最初から空いているものとする
+		if i == BINGO_CENTER {
 			task.Status = 1
 		} else {
 			task.Status = 0

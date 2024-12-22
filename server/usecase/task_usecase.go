@@ -13,11 +13,14 @@ type ITaskUsecase interface {
 	DeleteTask(room string) error
 }
 
+// usecase のソースコードはrepositoryのインターフェースだけに依存させる
 type taskUsecase struct {
 	tr repository.ITaskRepository
 	tv validator.ITaskValidator
 }
 
+// 依存性を注入するためのコンストラクタ
+// taskUsecase の構造体の実体を作成
 func NewTaskUsecase(tr repository.ITaskRepository, tv validator.ITaskValidator) ITaskUsecase {
 	return &taskUsecase{tr, tv}
 }
