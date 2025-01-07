@@ -1,62 +1,34 @@
-import {
-  Button,
-  Center,
-  Flex,
-  IconButton,
-  Img,
-  Spacer,
-  Text,
-} from '@chakra-ui/react'
+import { Button, Center, Flex, Spacer, Text } from '@chakra-ui/react'
 import { ResponseBingo, ResponsePlayer } from '../types'
+import { BingoTable } from './BingoTable'
 
 type NormalBingoProps = {
   bingos: ResponseBingo[]
   team1Players: ResponsePlayer[]
   team2Players: ResponsePlayer[]
-  changeStatusTeam: (locate: number, team: number) => void
   deleteGame: () => void
   exitGame: () => void
+  room: string
 }
-
-const NON_GOT_CELL = 0
 
 export const NormalBingoTable = ({
   bingos,
   team1Players,
   team2Players,
-  changeStatusTeam,
   deleteGame,
   exitGame,
+  room,
 }: NormalBingoProps) => {
   return (
     <Flex flexWrap="wrap" flexDirection="row" marginTop={30}>
       <Flex flexWrap="wrap" flexDirection="column">
-        <Flex flexWrap="wrap" w="500px" flexDirection="row" marginLeft={30}>
-          {bingos?.map((bingo) => (
-            <div key={bingo.id}>
-              {bingo.team === 1 && (
-                <IconButton
-                  h="100px"
-                  w="100px"
-                  backgroundColor={
-                    bingo.status === NON_GOT_CELL ? 'white' : 'red'
-                  }
-                  value={bingo.status}
-                  onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                  aria-label="bingo cell"
-                  icon={
-                    <Img
-                      src={`./character_image/character_${bingo.character}.png`}
-                      alt={`${bingo.character}`}
-                    />
-                  }
-                >
-                  {bingo.character}
-                </IconButton>
-              )}
-            </div>
-          ))}
-        </Flex>
+        <BingoTable
+          bingoProps={bingos}
+          room={room}
+          bingoTableSize="500px"
+          bingoCellSize="100px"
+          teamNumber={1}
+        />
         <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
           {team1Players?.map((player) => (
             <Center w="250px" h="30px" key={player.id} padding="30px">
@@ -70,32 +42,13 @@ export const NormalBingoTable = ({
       <Button onClick={exitGame}>退出</Button>
       <Spacer />
       <Flex flexWrap="wrap" flexDirection="column">
-        <Flex flexWrap="wrap" w="500px" flexDirection="row" marginRight={30}>
-          {bingos?.map((bingo) => (
-            <div key={bingo.id}>
-              {bingo.team === 2 && (
-                <IconButton
-                  h="100px"
-                  w="100px"
-                  backgroundColor={
-                    bingo.status === NON_GOT_CELL ? 'white' : 'red'
-                  }
-                  value={bingo.status}
-                  onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                  aria-label="bingo cell"
-                  icon={
-                    <Img
-                      src={`./character_image/character_${bingo.character}.png`}
-                      alt={`${bingo.character}`}
-                    />
-                  }
-                >
-                  {bingo.character}
-                </IconButton>
-              )}
-            </div>
-          ))}
-        </Flex>
+        <BingoTable
+          bingoProps={bingos}
+          room={room}
+          bingoTableSize="500px"
+          bingoCellSize="100px"
+          teamNumber={2}
+        />
         <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
           {team2Players?.map((player) => (
             <Center w="250px" h="30px" key={player.id} padding="30px">

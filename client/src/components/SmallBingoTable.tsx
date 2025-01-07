@@ -1,32 +1,23 @@
-import {
-  Button,
-  Center,
-  Flex,
-  IconButton,
-  Img,
-  Spacer,
-  Text,
-} from '@chakra-ui/react'
+import { Button, Center, Flex, Spacer, Text } from '@chakra-ui/react'
 import { ResponseBingo, ResponsePlayer } from '../types'
+import { BingoTable } from './BingoTable'
 
 type SmallBingoProps = {
   bingos: ResponseBingo[]
   team1Players: ResponsePlayer[]
   team2Players: ResponsePlayer[]
-  changeStatusTeam: (locate: number, team: number) => void
   deleteGame: () => void
   exitGame: () => void
+  room: string
 }
-
-const NON_GOT_CELL = 0
 
 export const SmallBingoTable = ({
   bingos,
   team1Players,
   team2Players,
-  changeStatusTeam,
   deleteGame,
   exitGame,
+  room,
 }: SmallBingoProps) => {
   return (
     <Flex flexWrap="wrap" flexDirection="column" marginTop={30}>
@@ -37,32 +28,13 @@ export const SmallBingoTable = ({
           </Center>
         ))}
       </Flex>
-      <Flex flexWrap="wrap" w="350px" flexDirection="row" marginLeft={30}>
-        {bingos?.map((bingo) => (
-          <div key={bingo.id}>
-            {bingo.team === 1 && (
-              <IconButton
-                h="70px"
-                w="70px"
-                backgroundColor={
-                  bingo.status === NON_GOT_CELL ? 'white' : 'red'
-                }
-                value={bingo.status}
-                onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                aria-label="bingo cell"
-                icon={
-                  <Img
-                    src={`./character_image/character_${bingo.character}.png`}
-                    alt={`${bingo.character}`}
-                  />
-                }
-              >
-                {bingo.character}
-              </IconButton>
-            )}
-          </div>
-        ))}
-      </Flex>
+      <BingoTable
+        bingoProps={bingos}
+        room={room}
+        bingoTableSize="350px"
+        bingoCellSize="70px"
+        teamNumber={1}
+      />
       <Spacer />
       <Button onClick={deleteGame}>終了</Button>
       <Button onClick={exitGame}>退出</Button>
@@ -74,32 +46,13 @@ export const SmallBingoTable = ({
           </Center>
         ))}
       </Flex>
-      <Flex flexWrap="wrap" w="350px" flexDirection="row" marginLeft={30}>
-        {bingos?.map((bingo) => (
-          <div key={bingo.id}>
-            {bingo.team === 2 && (
-              <IconButton
-                h="70px"
-                w="70px"
-                backgroundColor={
-                  bingo.status === NON_GOT_CELL ? 'white' : 'red'
-                }
-                value={bingo.status}
-                onClick={() => changeStatusTeam(bingo.locate, bingo.team)}
-                aria-label="bingo cell"
-                icon={
-                  <Img
-                    src={`./character_image/character_${bingo.character}.png`}
-                    alt={`${bingo.character}`}
-                  />
-                }
-              >
-                {bingo.character}
-              </IconButton>
-            )}
-          </div>
-        ))}
-      </Flex>
+      <BingoTable
+        bingoProps={bingos}
+        room={room}
+        bingoTableSize="350px"
+        bingoCellSize="70px"
+        teamNumber={2}
+      />
     </Flex>
   )
 }

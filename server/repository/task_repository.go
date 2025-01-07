@@ -23,6 +23,8 @@ func NewTaskRepository(db *gorm.DB) ITaskRepository {
 	return &taskRepository{db}
 }
 
+// Find で見つけたtasksの構造体を、引数で受け取ったtasksのポインタが指し示す先に書き込む
+// そのために引数はポインタだった
 func (tr *taskRepository) GetAllTasks(tasks *[]model.Bingo, room string) error {
 	if err := tr.db.Where("room=?", room).Order("team").Order("locate").Find(tasks).Error; err != nil {
 		return err

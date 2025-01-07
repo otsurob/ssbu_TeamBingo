@@ -15,6 +15,7 @@ import {
 import axios from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { API_URL } from '../constants/constants'
 
 export default function Home() {
   const toast = useToast()
@@ -25,14 +26,18 @@ export default function Home() {
   const [name, setName] = useState('')
   const [room, setRoom] = useState('')
 
+  const showToast = (title: string) => {
+    toast({
+      title,
+      status: 'error',
+      isClosable: true,
+      position: 'top',
+    })
+  }
+
   const makeRoom = async () => {
     if (name == '' || room == '') {
-      toast({
-        title: '名前と部屋IDを入力してください',
-        status: 'error',
-        isClosable: true,
-        position: 'top',
-      })
+      showToast('名前と部屋IDを入力してください')
       return
     }
     const cb1 = {
@@ -43,21 +48,14 @@ export default function Home() {
       room: room,
       team: 2,
     }
-    await axios
-      .get(`${process.env.REACT_APP_API_URL}/bingo?room=${room}`)
-      .then(async (res) => {
-        if (res.data.length !== 0) {
-          toast({
-            title: 'その名前の部屋はすでに存在します！',
-            status: 'error',
-            isClosable: true,
-            position: 'top',
-          })
-          isRoomExisted = true
-        } else {
-          isRoomExisted = false
-        }
-      })
+    await axios.get(`${API_URL}/bingo?room=${room}`).then(async (res) => {
+      if (res.data.length !== 0) {
+        showToast('その名前の部屋はすでに存在します！')
+        isRoomExisted = true
+      } else {
+        isRoomExisted = false
+      }
+    })
     if (isRoomExisted) {
       return
     }
@@ -67,39 +65,27 @@ export default function Home() {
       name: name,
       team: Number(team),
     }
-    await axios.post(`${process.env.REACT_APP_API_URL}/create`, cb1)
+    await axios.post(`${API_URL}/create`, cb1)
 
-    await axios.post(`${process.env.REACT_APP_API_URL}/create`, cb2)
+    await axios.post(`${API_URL}/create`, cb2)
 
-    await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
+    await axios.post(`${API_URL}/joinPlayer`, player)
     navigate(`game?room=${room}&name=${name}&team=${team}`)
   }
 
   const enterRoom = async () => {
     if (name == '' || room == '') {
-      toast({
-        title: '名前と部屋IDを入力してください',
-        status: 'error',
-        isClosable: true,
-        position: 'top',
-      })
+      showToast('名前と部屋IDを入力してください')
       return
     }
-    await axios
-      .get(`${process.env.REACT_APP_API_URL}/bingo?room=${room}`)
-      .then(async (res) => {
-        if (res.data.length === 0) {
-          toast({
-            title: '部屋が存在しません！',
-            status: 'error',
-            isClosable: true,
-            position: 'top',
-          })
-          isRoomExisted = false
-        } else {
-          isRoomExisted = true
-        }
-      })
+    await axios.get(`${API_URL}/bingo?room=${room}`).then(async (res) => {
+      if (res.data.length === 0) {
+        showToast('部屋が存在しません！')
+        isRoomExisted = false
+      } else {
+        isRoomExisted = true
+      }
+    })
     if (!isRoomExisted) {
       return
     }
@@ -109,7 +95,7 @@ export default function Home() {
       team: Number(team),
     }
 
-    await axios.post(`${process.env.REACT_APP_API_URL}/joinPlayer`, player)
+    await axios.post(`${API_URL}/joinPlayer`, player)
     navigate(`game?room=${room}&name=${name}&team=${team}`)
   }
 

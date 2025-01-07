@@ -27,6 +27,7 @@ func NewTaskUsecase(tr repository.ITaskRepository, tv validator.ITaskValidator) 
 
 func (tu *taskUsecase) GetAllTasks(room string) ([]model.BingoResponse, error) {
 	tasks := []model.Bingo{}
+	// repository のGetAllTasksの引数にtasksのアドレスを渡すことで、そのアドレスに値(データベースから取得したデータ)が書き込まれていく
 	if err := tu.tr.GetAllTasks(&tasks, room); err != nil {
 		return nil, err
 	}

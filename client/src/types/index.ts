@@ -5,7 +5,6 @@ export type CreateBingo = {
 
 export type ResponseBingo = {
   id:        number   
-	room:      string 
 	team :     number
 	locate:    number
 	status:   number
