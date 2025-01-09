@@ -1,4 +1,4 @@
-package model
+package domain
 
 type Player struct {
 	ID   uint   `json:"id" gorm:"primaryKey"`
