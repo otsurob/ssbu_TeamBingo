@@ -1,13 +1,13 @@
 package usecase
 
 import (
-	"server/model"
+	"server/domain"
 	"server/repository"
 )
 
 type IPlayerUsecase interface {
-	GetTeamPlayers(room string, team uint) ([]model.PlayerResponse, error)
-	CreatePlayer(player model.Player) (model.PlayerResponse, error)
+	GetTeamPlayers(room string, team uint) ([]domain.PlayerResponse, error)
+	CreatePlayer(player domain.Player) (domain.PlayerResponse, error)
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string, team uint) error
 }
@@ -20,15 +20,15 @@ func NewPlayerUsecase(tr repository.IPlayerRepository) IPlayerUsecase {
 	return &playerUsecase{tr}
 }
 
-func (pu *playerUsecase) GetTeamPlayers(room string, team uint) ([]model.PlayerResponse, error) {
-	players := []model.Player{}
+func (pu *playerUsecase) GetTeamPlayers(room string, team uint) ([]domain.PlayerResponse, error) {
+	players := []domain.Player{}
 	if err := pu.tr.GetTeamPlayers(&players, room, team); err != nil {
 		return nil, err
 	}
 	//クライアントへのレスポンス用
-	resPlayers := []model.PlayerResponse{}
+	resPlayers := []domain.PlayerResponse{}
 	for _, v := range players {
-		t := model.PlayerResponse{
+		t := domain.PlayerResponse{
 			ID:   v.ID,
 			Name: v.Name,
 			Team: v.Team,
@@ -38,12 +38,12 @@ func (pu *playerUsecase) GetTeamPlayers(room string, team uint) ([]model.PlayerR
 	return resPlayers, nil
 }
 
-func (pu *playerUsecase) CreatePlayer(player model.Player) (model.PlayerResponse, error) {
+func (pu *playerUsecase) CreatePlayer(player domain.Player) (domain.PlayerResponse, error) {
 
 	if err := pu.tr.CreatePlayer(&player); err != nil {
-		return model.PlayerResponse{}, err
+		return domain.PlayerResponse{}, err
 	}
-	resPlayer := model.PlayerResponse{
+	resPlayer := domain.PlayerResponse{
 		ID:   player.ID,
 		Name: player.Name,
 		Team: player.Team,

@@ -1,4 +1,4 @@
-package model
+package domain
 
 type Bingo struct {
 	ID        uint   `json:"id" gorm:"primaryKey"`

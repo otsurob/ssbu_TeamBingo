@@ -2,7 +2,7 @@ package controller
 
 import (
 	"net/http"
-	"server/model"
+	"server/domain"
 	"server/usecase"
 	"strconv"
 
@@ -37,7 +37,7 @@ func (pc *playerController) GetTeamPlayers(c echo.Context) error {
 
 func (pc *playerController) CreatePlayer(c echo.Context) error {
 
-	player := model.Player{}
+	player := domain.Player{}
 	if err := c.Bind(&player); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}

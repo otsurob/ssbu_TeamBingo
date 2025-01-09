@@ -2,14 +2,14 @@ package repository
 
 import (
 	"fmt"
-	"server/model"
+	"server/domain"
 
 	"gorm.io/gorm"
 )
 
 type IPlayerRepository interface {
-	GetTeamPlayers(players *[]model.Player, room string, team uint) error
-	CreatePlayer(player *model.Player) error
+	GetTeamPlayers(players *[]domain.Player, room string, team uint) error
+	CreatePlayer(player *domain.Player) error
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string, team uint) error
 }
@@ -22,14 +22,14 @@ func NewPlayerRepository(db *gorm.DB) IPlayerRepository {
 	return &playerRepository{db}
 }
 
-func (pr *playerRepository) GetTeamPlayers(players *[]model.Player, room string, team uint) error {
+func (pr *playerRepository) GetTeamPlayers(players *[]domain.Player, room string, team uint) error {
 	if err := pr.db.Where("room=? AND team=?", room, team).Find(players).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (pr *playerRepository) CreatePlayer(player *model.Player) error {
+func (pr *playerRepository) CreatePlayer(player *domain.Player) error {
 	if err := pr.db.Create(player).Error; err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (pr *playerRepository) CreatePlayer(player *model.Player) error {
 }
 
 func (pr *playerRepository) DeletePlayer(room string) error {
-	result := pr.db.Where("room=?", room).Delete(&model.Player{})
+	result := pr.db.Where("room=?", room).Delete(&domain.Player{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -48,7 +48,7 @@ func (pr *playerRepository) DeletePlayer(room string) error {
 }
 
 func (pr *playerRepository) DeleteOnePlayer(room string, name string, team uint) error {
-	result := pr.db.Where("room=? AND name=? AND team=?", room, name, team).Delete(&model.Player{})
+	result := pr.db.Where("room=? AND name=? AND team=?", room, name, team).Delete(&domain.Player{})
 	if result.Error != nil {
 		return result.Error
 	}

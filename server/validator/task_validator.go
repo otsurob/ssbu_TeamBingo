@@ -1,13 +1,13 @@
 package validator
 
 import (
-	"server/model"
+	"server/domain"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type ITaskValidator interface {
-	TaskValidate(task model.Bingo) error
+	TaskValidate(task domain.Bingo) error
 }
 
 type taskValidator struct{}
@@ -17,7 +17,7 @@ func NewTaskValidator() ITaskValidator {
 }
 
 // バリデーションで評価したいtaskを引数で受け取る
-func (tv *taskValidator) TaskValidate(task model.Bingo) error {
+func (tv *taskValidator) TaskValidate(task domain.Bingo) error {
 	return validation.ValidateStruct(&task,
 		validation.Field(
 			//taskのタイトルに対するバリデーション

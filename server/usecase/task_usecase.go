@@ -1,15 +1,15 @@
 package usecase
 
 import (
-	"server/model"
+	"server/domain"
 	"server/repository"
 	"server/validator"
 )
 
 type ITaskUsecase interface {
-	GetAllTasks(room string) ([]model.BingoResponse, error)
-	CreateTask(task model.Bingo) (model.BingoResponse, error)
-	UpdateTask(task model.Bingo, room string, team uint, locate uint) (model.BingoResponse, error)
+	GetAllTasks(room string) ([]domain.BingoResponse, error)
+	CreateTask(task domain.Bingo) ([]domain.BingoResponse, error)
+	UpdateTask(task domain.Bingo, room string, team uint, locate uint) (domain.BingoResponse, error)
 	DeleteTask(room string) error
 }
 
@@ -25,16 +25,16 @@ func NewTaskUsecase(tr repository.ITaskRepository, tv validator.ITaskValidator) 
 	return &taskUsecase{tr, tv}
 }
 
-func (tu *taskUsecase) GetAllTasks(room string) ([]model.BingoResponse, error) {
-	tasks := []model.Bingo{}
+func (tu *taskUsecase) GetAllTasks(room string) ([]domain.BingoResponse, error) {
+	tasks := []domain.Bingo{}
 	// repository のGetAllTasksの引数にtasksのアドレスを渡すことで、そのアドレスに値(データベースから取得したデータ)が書き込まれていく
 	if err := tu.tr.GetAllTasks(&tasks, room); err != nil {
 		return nil, err
 	}
 	//クライアントへのレスポンス用
-	resTasks := []model.BingoResponse{}
+	resTasks := []domain.BingoResponse{}
 	for _, v := range tasks {
-		t := model.BingoResponse{
+		t := domain.BingoResponse{
 			ID:        v.ID,
 			Team:      v.Team,
 			Locate:    v.Locate,
@@ -46,30 +46,47 @@ func (tu *taskUsecase) GetAllTasks(room string) ([]model.BingoResponse, error) {
 	return resTasks, nil
 }
 
-func (tu *taskUsecase) CreateTask(task model.Bingo) (model.BingoResponse, error) {
+func (tu *taskUsecase) CreateTask(task domain.Bingo) ([]domain.BingoResponse, error) {
+	characterNumber := domain.RandomGenerator()
+
+	var taskResList []domain.BingoResponse
+
+	for i, v := range characterNumber {
+		newTask := domain.Bingo{
+			Room:      task.Room,
+			Team:      task.Team,
+			Locate:    uint(i),
+			Character: uint(v),
+			Status:    0,
+		}
+		if i == domain.BINGO_CENTER {
+			newTask.Status = 1
+		}
+		if err := tu.tr.CreateTask(&newTask); err != nil {
+			return []domain.BingoResponse{}, err
+		}
+		taskRes := domain.BingoResponse{
+			ID:        newTask.ID,
+			Team:      newTask.Team,
+			Locate:    newTask.Locate,
+			Status:    newTask.Status,
+			Character: newTask.Character,
+		}
+		taskResList = append(taskResList, taskRes)
+	}
+
 	//バリデーションのチェック
 	if err := tu.tv.TaskValidate(task); err != nil {
-		return model.BingoResponse{}, err
+		return []domain.BingoResponse{}, err
 	}
-	//引数で渡したアドレスの指し示す値が書き換わっている(&taskの話)
-	if err := tu.tr.CreateTask(&task); err != nil {
-		return model.BingoResponse{}, err
-	}
-	resTask := model.BingoResponse{
-		ID:        task.ID,
-		Team:      task.Team,
-		Locate:    task.Locate,
-		Status:    task.Status,
-		Character: task.Character,
-	}
-	return resTask, nil
+	return taskResList, nil
 }
 
-func (tu *taskUsecase) UpdateTask(task model.Bingo, room string, team uint, locate uint) (model.BingoResponse, error) {
+func (tu *taskUsecase) UpdateTask(task domain.Bingo, room string, team uint, locate uint) (domain.BingoResponse, error) {
 	if err := tu.tr.UpdateTask(&task, room, team, locate); err != nil {
-		return model.BingoResponse{}, err
+		return domain.BingoResponse{}, err
 	}
-	resTask := model.BingoResponse{
+	resTask := domain.BingoResponse{
 		ID:        task.ID,
 		Team:      task.Team,
 		Locate:    task.Locate,
