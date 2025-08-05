@@ -12,7 +12,7 @@ func NewRouter(tc controller.ITaskController, pc controller.IPlayerController) *
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		//アクセスを許可するフロントエンドのドメインを追加
-		AllowOrigins: []string{"http://localhost:3000", os.Getenv("FE_URL")},
+		AllowOrigins: []string{"http://localhost:3000", "http://localhost:5173", os.Getenv("FE_URL")},
 		//許可するヘッダーの一覧　ヘッダー経由でcsrfトークンを受け取れるようにする
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept,
 			echo.HeaderAccessControlAllowHeaders},
