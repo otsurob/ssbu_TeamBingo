@@ -1,15 +1,15 @@
-import { Button, Center, Flex, Spacer, Text } from '@chakra-ui/react'
-import { ResponseBingo, ResponsePlayer } from '../types'
-import { BingoTable } from './BingoTable'
+import { Button, Center, Flex, Spacer, Text } from "@chakra-ui/react";
+import { BingoTable } from "./BingoTable";
+import type { ResponseBingo, ResponsePlayer } from "../types";
 
 type NormalBingoProps = {
-  bingos: ResponseBingo[]
-  team1Players: ResponsePlayer[]
-  team2Players: ResponsePlayer[]
-  deleteGame: () => void
-  exitGame: () => void
-  room: string
-}
+  bingos: ResponseBingo[];
+  team1Players: ResponsePlayer[];
+  team2Players: ResponsePlayer[];
+  deleteGame: () => void;
+  exitGame: () => void;
+  room: string;
+};
 
 export const NormalBingoTable = ({
   bingos,
@@ -58,5 +58,5 @@ export const NormalBingoTable = ({
         </Flex>
       </Flex>
     </Flex>
-  )
-}
+  );
+};
