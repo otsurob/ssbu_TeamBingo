@@ -53,15 +53,12 @@ export const BingoTable = ({
               backgroundColor={bingo.status === NON_GOT_CELL ? "white" : "red"}
               value={bingo.status}
               onClick={() => changeBingoStatus(bingo.locate, bingo.team)}
-              aria-label="bingo cell"
-              icon={
-                <Image
-                  src={`./character_image/character_${bingo.character}.png`}
-                  alt={`${bingo.character}`}
-                />
-              }
+              // aria-label={bingo.character}
             >
-              {bingo.character}
+              <Image
+                src={`/character_image/character_${bingo.character}.png`}
+                alt={`${bingo.character}`}
+              />
             </IconButton>
           )}
         </div>
