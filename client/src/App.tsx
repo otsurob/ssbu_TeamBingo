@@ -1,6 +1,6 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import Home from './components/Home'
-import Game from './components/Game'
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Home from "./components/Home";
+import Game from "./components/Game";
 
 function App() {
   return (
@@ -10,7 +10,7 @@ function App() {
         <Route path="/game/" element={<Game />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -4,129 +4,139 @@ import {
   Card,
   CardBody,
   Input,
-  FormControl,
-  FormLabel,
   Button,
-  useToast,
   RadioGroup,
-  Radio,
   Stack,
-} from '@chakra-ui/react'
-import axios from 'axios'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { API_URL } from '../constants/constants'
+  Field,
+} from "@chakra-ui/react";
+import axios from "axios";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_URL } from "../constants/constants";
+import { toaster } from "./ui/toaster";
 
 export default function Home() {
-  const toast = useToast()
-  const navigate = useNavigate()
-  const [team, setTeam] = useState('0')
-  let isRoomExisted = false
+  const navigate = useNavigate();
+  const [team, setTeam] = useState<string | null>("0");
+  let isRoomExisted = false;
 
-  const [name, setName] = useState('')
-  const [room, setRoom] = useState('')
+  const [name, setName] = useState("");
+  const [room, setRoom] = useState("");
 
   const showToast = (title: string) => {
-    toast({
-      title,
-      status: 'error',
-      isClosable: true,
-      position: 'top',
-    })
-  }
+    toaster.create({
+      title: title,
+      type: "error",
+      closable: true,
+      // placement: "top",
+    });
+  };
 
   const makeRoom = async () => {
-    if (name == '' || room == '') {
-      showToast('名前と部屋IDを入力してください')
-      return
+    if (name == "" || room == "") {
+      showToast("名前と部屋IDを入力してください");
+      return;
     }
     const cb1 = {
       room: room,
       team: 1,
-    }
+    };
     const cb2 = {
       room: room,
       team: 2,
-    }
+    };
     await axios.get(`${API_URL}/bingo?room=${room}`).then(async (res) => {
       if (res.data.length !== 0) {
-        showToast('その名前の部屋はすでに存在します！')
-        isRoomExisted = true
+        showToast("その名前の部屋はすでに存在します！");
+        isRoomExisted = true;
       } else {
-        isRoomExisted = false
+        isRoomExisted = false;
       }
-    })
+    });
     if (isRoomExisted) {
-      return
+      return;
     }
 
     const player = {
       room: room,
       name: name,
       team: Number(team),
-    }
-    await axios.post(`${API_URL}/create`, cb1)
+    };
+    await axios.post(`${API_URL}/create`, cb1);
 
-    await axios.post(`${API_URL}/create`, cb2)
+    await axios.post(`${API_URL}/create`, cb2);
 
-    await axios.post(`${API_URL}/joinPlayer`, player)
-    navigate(`game?room=${room}&name=${name}&team=${team}`)
-  }
+    await axios.post(`${API_URL}/joinPlayer`, player);
+    navigate(`game?room=${room}&name=${name}&team=${team}`);
+  };
 
   const enterRoom = async () => {
-    if (name == '' || room == '') {
-      showToast('名前と部屋IDを入力してください')
-      return
+    if (name == "" || room == "") {
+      showToast("名前と部屋IDを入力してください");
+      return;
     }
     await axios.get(`${API_URL}/bingo?room=${room}`).then(async (res) => {
       if (res.data.length === 0) {
-        showToast('部屋が存在しません！')
-        isRoomExisted = false
+        showToast("部屋が存在しません！");
+        isRoomExisted = false;
       } else {
-        isRoomExisted = true
+        isRoomExisted = true;
       }
-    })
+    });
     if (!isRoomExisted) {
-      return
+      return;
     }
     const player = {
       room: room,
       name: name,
       team: Number(team),
-    }
+    };
 
-    await axios.post(`${API_URL}/joinPlayer`, player)
-    navigate(`game?room=${room}&name=${name}&team=${team}`)
-  }
+    await axios.post(`${API_URL}/joinPlayer`, player);
+    navigate(`game?room=${room}&name=${name}&team=${team}`);
+  };
+
+  const radioItems = [
+    { label: "Team 1", value: "1" },
+    { label: "Team 2", value: "2" },
+    { label: "観戦として参加", value: "3" },
+  ];
 
   return (
-    <Container pt={20}>
-      <Card>
+    <Container pt={20} centerContent minH="100vh">
+      <Card.Root>
         <CardBody>
-          <FormControl>
-            <FormLabel>名前</FormLabel>
+          <Field.Root>
+            <Field.Label>名前</Field.Label>
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-          </FormControl>
-          <FormControl mt={4}>
-            <FormLabel>部屋ID</FormLabel>
+          </Field.Root>
+          <Field.Root mt={4}>
+            <Field.Label>部屋ID</Field.Label>
             <Input
               type="text"
               value={room}
               onChange={(e) => setRoom(e.target.value)}
             />
-          </FormControl>
-          <RadioGroup marginTop={10} onChange={setTeam} value={team}>
+          </Field.Root>
+          <RadioGroup.Root
+            marginTop={10}
+            value={team}
+            onValueChange={(e) => setTeam(e.value)}
+          >
             <Stack direction="row">
-              <Radio value="1">Team1</Radio>
-              <Radio value="2">Team2</Radio>
-              {/* <Radio value="5">ランダム</Radio> */}
-              <Radio value="3">観戦として参加</Radio>
+              {radioItems.map((item) => (
+                <RadioGroup.Item key={item.value} value={item.value}>
+                  <RadioGroup.ItemHiddenInput />
+                  <RadioGroup.ItemIndicator />
+                  <RadioGroup.ItemText>{item.label}</RadioGroup.ItemText>
+                </RadioGroup.Item>
+              ))}
             </Stack>
-          </RadioGroup>
+          </RadioGroup.Root>
           <Center mt={8}>
             <Button
               marginRight={70}
@@ -146,7 +156,7 @@ export default function Home() {
             </Button>
           </Center>
         </CardBody>
-      </Card>
+      </Card.Root>
     </Container>
-  )
+  );
 }
