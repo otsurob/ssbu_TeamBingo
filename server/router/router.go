@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func NewRouter(tc controller.ITaskController, pc controller.IPlayerController) *echo.Echo {
+func NewRouter(tc controller.ITaskController, rc controller.IRoomController) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		//アクセスを許可するフロントエンドのドメインを追加
@@ -26,9 +26,12 @@ func NewRouter(tc controller.ITaskController, pc controller.IPlayerController) *
 	e.PUT("/update", tc.UpdateTask)
 	e.DELETE("/:room", tc.DeleteTask)
 
-	e.GET("/player", pc.GetTeamPlayers)
-	e.POST("/joinPlayer", pc.CreatePlayer)
-	e.DELETE("/leavePlayer/:room", pc.DeletePlayer)
-	e.DELETE("/leaveOnePlayer", pc.DeleteOnePlayer)
+	e.GET("/rooms", rc.GetAllRooms)
+	e.POST("/createRoom", rc.CreateRoom)
+	e.DELETE("/deleteRoom:roomName", rc.DeleteRoom)
+	e.GET("/player", rc.GetTeamPlayers)
+	e.POST("/joinPlayer", rc.CreatePlayer)
+	e.DELETE("/leavePlayer/:room", rc.DeletePlayer)
+	e.DELETE("/leaveOnePlayer", rc.DeleteOnePlayer)
 	return e
 }

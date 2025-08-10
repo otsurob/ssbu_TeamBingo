@@ -20,8 +20,14 @@ type Player struct {
 	Team   Team   `json:"team" gorm:"not null"`
 }
 
-// type PlayerResponse struct {
-// 	ID   uint   `json:"id" gorm:"primaryKey"`
-// 	Name string `json:"name" gorm:"not null"`
-// 	Team Team   `json:"team" gorm:"not null"`
-// }
+type RoomResponse struct {
+	ID   uint   `json:"id" gorm:"primaryKey"`
+	Name string `json:"name" gorm:"not null"`
+}
+
+type PlayerResponse struct {
+	ID     uint   `json:"id" gorm:"primaryKey"`
+	Name   string `json:"name" gorm:"not null"`
+	RoomId string `json:"roomid" gorm:"not null"`
+	Team   Team   `json:"team" gorm:"not null"`
+}
