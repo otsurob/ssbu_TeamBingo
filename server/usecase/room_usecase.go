@@ -9,6 +9,7 @@ type IRoomUsecase interface {
 	GetAllRooms() ([]domain.RoomResponse, error)
 	CreateRoom(room domain.Room) (domain.RoomResponse, error)
 	DeleteRoom(roomName string) error
+	GetRoomPassword(roomName string) (string, error)
 	GetTeamPlayers(room string, team uint) ([]domain.PlayerResponse, error)
 	CreatePlayer(player domain.Player) (domain.PlayerResponse, error)
 	DeletePlayer(room string) error
@@ -57,6 +58,14 @@ func (ru *roomUsecase) DeleteRoom(roomName string) error {
 		return err
 	}
 	return nil
+}
+
+func (ru *roomUsecase) GetRoomPassword(roomName string) (string, error) {
+	room := domain.Room{}
+	if err := ru.rr.GetRoomPassword(&room, roomName); err != nil {
+		return "", err
+	}
+	return room.Password, nil
 }
 
 func (ru *roomUsecase) GetTeamPlayers(room string, team uint) ([]domain.PlayerResponse, error) {

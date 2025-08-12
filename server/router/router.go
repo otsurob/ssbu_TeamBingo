@@ -29,6 +29,7 @@ func NewRouter(tc controller.ITaskController, rc controller.IRoomController) *ec
 	e.GET("/rooms", rc.GetAllRooms)
 	e.POST("/createRoom", rc.CreateRoom)
 	e.DELETE("/deleteRoom:roomName", rc.DeleteRoom)
+	e.GET("roomPassword", rc.GetRoomPassword)
 	e.GET("/player", rc.GetTeamPlayers)
 	e.POST("/joinPlayer", rc.CreatePlayer)
 	e.DELETE("/leavePlayer/:room", rc.DeletePlayer)

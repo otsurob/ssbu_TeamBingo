@@ -11,6 +11,7 @@ type IRoomRepository interface {
 	GetAllRooms(rooms *[]domain.Room) error
 	CreateRoom(room *domain.Room) error
 	DeleteRoom(roomName string) error
+	GetRoomPassword(room *domain.Room, roomName string) error
 	GetTeamPlayers(players *[]domain.Player, room string, team uint) error
 	CreatePlayer(player *domain.Player) error
 	DeletePlayer(room string) error
@@ -46,6 +47,13 @@ func (rr *roomRepository) DeleteRoom(roomName string) error {
 	}
 	if result.RowsAffected < 1 {
 		return fmt.Errorf("object does not exist")
+	}
+	return nil
+}
+
+func (rr *roomRepository) GetRoomPassword(room *domain.Room, roomName string) error {
+	if err := rr.db.Where("room=?", roomName).Find(room).Error; err != nil {
+		return err
 	}
 	return nil
 }
