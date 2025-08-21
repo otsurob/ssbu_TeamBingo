@@ -11,6 +11,7 @@ import (
 
 type IRoomController interface {
 	GetAllRooms(c echo.Context) error
+	GetRoom(c echo.Context) error
 	CreateRoom(c echo.Context) error
 	DeleteRoom(c echo.Context) error
 	CheckRoomPassword(c echo.Context) error
@@ -30,6 +31,15 @@ func NewRoomController(ru usecase.IRoomUsecase) IRoomController {
 
 func (rc *roomController) GetAllRooms(c echo.Context) error {
 	roomRes, err := rc.ru.GetAllRooms()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, roomRes)
+}
+
+func (rc *roomController) GetRoom(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	roomRes, err := rc.ru.GetRoom(roomName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

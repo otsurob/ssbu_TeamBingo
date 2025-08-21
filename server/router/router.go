@@ -27,6 +27,7 @@ func NewRouter(bc controller.IBingoController, rc controller.IRoomController) *e
 	e.DELETE("/bingos/:room", bc.DeleteBingos)
 
 	e.GET("/rooms", rc.GetAllRooms)
+	e.GET("/room", rc.GetRoom)
 	e.POST("/createRoom", rc.CreateRoom)
 	e.DELETE("/deleteRoom/:room", rc.DeleteRoom)
 	e.GET("roomPassword", rc.CheckRoomPassword)

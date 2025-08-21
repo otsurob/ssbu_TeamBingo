@@ -7,6 +7,7 @@ import (
 
 type IRoomUsecase interface {
 	GetAllRooms() ([]domain.RoomResponse, error)
+	GetRoom(roomName string) (domain.RoomResponse, error)
 	CreateRoom(room domain.Room) (domain.RoomResponse, error)
 	DeleteRoom(roomName string) error
 	CheckRoomPassword(roomName string, password string) (bool, error)
@@ -39,6 +40,18 @@ func (ru *roomUsecase) GetAllRooms() ([]domain.RoomResponse, error) {
 		resRooms = append(resRooms, t)
 	}
 	return resRooms, nil
+}
+
+func (ru *roomUsecase) GetRoom(roomName string) (domain.RoomResponse, error) {
+	room := domain.Room{}
+	if err := ru.rr.GetRoom(&room, roomName); err != nil {
+		return domain.RoomResponse{}, err
+	}
+	resRoom := domain.RoomResponse{
+		ID:       room.ID,
+		RoomName: room.RoomName,
+	}
+	return resRoom, nil
 }
 
 func (ru *roomUsecase) CreateRoom(room domain.Room) (domain.RoomResponse, error) {
