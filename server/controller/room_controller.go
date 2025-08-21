@@ -13,7 +13,7 @@ type IRoomController interface {
 	GetAllRooms(c echo.Context) error
 	CreateRoom(c echo.Context) error
 	DeleteRoom(c echo.Context) error
-	GetRoomPassword(c echo.Context) error
+	CheckRoomPassword(c echo.Context) error
 	GetTeamPlayers(c echo.Context) error
 	CreatePlayer(c echo.Context) error
 	DeletePlayer(c echo.Context) error
@@ -49,7 +49,7 @@ func (rc *roomController) CreateRoom(c echo.Context) error {
 }
 
 func (rc *roomController) DeleteRoom(c echo.Context) error {
-	roomName := c.QueryParam("name")
+	roomName := c.Param("room")
 
 	err := rc.ru.DeleteRoom(roomName)
 	if err != nil {
@@ -58,9 +58,10 @@ func (rc *roomController) DeleteRoom(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-func (rc *roomController) GetRoomPassword(c echo.Context) error {
+func (rc *roomController) CheckRoomPassword(c echo.Context) error {
+	roomName := c.QueryParam("room")
 	password := c.QueryParam("password")
-	roomPasswordRes, err := rc.ru.GetRoomPassword(password)
+	roomPasswordRes, err := rc.ru.CheckRoomPassword(roomName, password)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -68,10 +69,10 @@ func (rc *roomController) GetRoomPassword(c echo.Context) error {
 }
 
 func (rc *roomController) GetTeamPlayers(c echo.Context) error {
-	room := c.QueryParam("room")
+	roomName := c.QueryParam("room")
 	team := c.QueryParam("team")
 	teamNumber, _ := strconv.Atoi(team)
-	playersRes, err := rc.ru.GetTeamPlayers(room, uint(teamNumber))
+	playersRes, err := rc.ru.GetTeamPlayers(roomName, uint(teamNumber))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -79,12 +80,12 @@ func (rc *roomController) GetTeamPlayers(c echo.Context) error {
 }
 
 func (rc *roomController) CreatePlayer(c echo.Context) error {
-
+	roomName := c.QueryParam("room")
 	player := domain.Player{}
 	if err := c.Bind(&player); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	playerRes, err := rc.ru.CreatePlayer(player)
+	playerRes, err := rc.ru.CreatePlayer(player, roomName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -93,9 +94,9 @@ func (rc *roomController) CreatePlayer(c echo.Context) error {
 }
 
 func (rc *roomController) DeletePlayer(c echo.Context) error {
-	room := c.Param("room")
+	roomName := c.Param("room")
 
-	err := rc.ru.DeletePlayer(room)
+	err := rc.ru.DeletePlayer(roomName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -103,12 +104,12 @@ func (rc *roomController) DeletePlayer(c echo.Context) error {
 }
 
 func (rc *roomController) DeleteOnePlayer(c echo.Context) error {
-	room := c.QueryParam("room")
+	roomName := c.QueryParam("room")
 	name := c.QueryParam("name")
 	team := c.QueryParam("team")
 	teamNumber, _ := strconv.Atoi(team)
 
-	err := rc.ru.DeleteOnePlayer(room, name, uint(teamNumber))
+	err := rc.ru.DeleteOnePlayer(roomName, name, uint(teamNumber))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
