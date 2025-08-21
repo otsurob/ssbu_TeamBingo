@@ -5,9 +5,9 @@ services:
     ports:
       - 5434:5432
     environment:
-      POSTGRES_USER: bingo
-      POSTGRES_PASSWORD: bingo
-      POSTGRES_DB: bingo
+      POSTGRES_USER: otsu
+      POSTGRES_PASSWORD: otsu
+      POSTGRES_DB: otsu
     restart: always
     networks:
       - lesson
