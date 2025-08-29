@@ -11,7 +11,7 @@ type IRoomUsecase interface {
 	CreateRoom(room domain.Room) (domain.RoomResponse, error)
 	DeleteRoom(roomName string) error
 	CheckRoomPassword(roomName string, password string) (bool, error)
-	GetTeamPlayers(room string, team uint) ([]domain.PlayerResponse, error)
+	GetPlayers(room string) ([]domain.PlayerResponse, error)
 	CreatePlayer(player domain.Player, roomName string) (domain.PlayerResponse, error)
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string, team uint) error
@@ -85,9 +85,9 @@ func (ru *roomUsecase) CheckRoomPassword(roomName string, password string) (bool
 	return false, nil
 }
 
-func (ru *roomUsecase) GetTeamPlayers(roomName string, team uint) ([]domain.PlayerResponse, error) {
+func (ru *roomUsecase) GetPlayers(roomName string) ([]domain.PlayerResponse, error) {
 	players := []domain.Player{}
-	if err := ru.rr.GetTeamPlayers(&players, roomName, team); err != nil {
+	if err := ru.rr.GetPlayers(&players, roomName); err != nil {
 		return nil, err
 	}
 	//クライアントへのレスポンス用

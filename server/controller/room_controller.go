@@ -15,7 +15,7 @@ type IRoomController interface {
 	CreateRoom(c echo.Context) error
 	DeleteRoom(c echo.Context) error
 	CheckRoomPassword(c echo.Context) error
-	GetTeamPlayers(c echo.Context) error
+	GetPlayers(c echo.Context) error
 	CreatePlayer(c echo.Context) error
 	DeletePlayer(c echo.Context) error
 	DeleteOnePlayer(c echo.Context) error
@@ -78,11 +78,12 @@ func (rc *roomController) CheckRoomPassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, roomPasswordRes)
 }
 
-func (rc *roomController) GetTeamPlayers(c echo.Context) error {
+func (rc *roomController) GetPlayers(c echo.Context) error {
 	roomName := c.QueryParam("room")
-	team := c.QueryParam("team")
-	teamNumber, _ := strconv.Atoi(team)
-	playersRes, err := rc.ru.GetTeamPlayers(roomName, uint(teamNumber))
+	// 前の変更　チームいらんくね？
+	// team := c.QueryParam("team")
+	// teamNumber, _ := strconv.Atoi(team)
+	playersRes, err := rc.ru.GetPlayers(roomName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
