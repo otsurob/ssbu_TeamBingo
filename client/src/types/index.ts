@@ -21,3 +21,8 @@ export type ResponsePlayer = {
   name:string
   team:string
 }
+
+export type ResponseRoom = {
+  id: number
+  room_name:string
+}
