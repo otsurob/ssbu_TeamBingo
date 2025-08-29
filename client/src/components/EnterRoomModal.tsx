@@ -12,10 +12,10 @@ import {
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toaster } from "./ui/toaster";
+import { toaster } from "../components/ui/toaster";
 import { API_URL } from "../constants/constants";
 
-export default function Home() {
+const EnterRoomModal = () => {
   const navigate = useNavigate();
   const [team, setTeam] = useState<string | null>("0");
   let isRoomExisted = false;
@@ -37,15 +37,7 @@ export default function Home() {
       showToast("名前と部屋IDを入力してください");
       return;
     }
-    const cb1 = {
-      room: room,
-      team: 1,
-    };
-    const cb2 = {
-      room: room,
-      team: 2,
-    };
-    await axios.get(`${API_URL}/bingo?room=${room}`).then(async (res) => {
+    await axios.get(`${API_URL}/room?room=${room}`).then(async (res) => {
       if (res.data.length !== 0) {
         showToast("その名前の部屋はすでに存在します！");
         isRoomExisted = true;
@@ -62,9 +54,11 @@ export default function Home() {
       name: name,
       team: Number(team),
     };
-    await axios.post(`${API_URL}/create`, cb1);
-
-    await axios.post(`${API_URL}/create`, cb2);
+    const roomInfo = {
+      room_name: room,
+      password: "test",
+    };
+    await axios.post(`${API_URL}/createRoom`, roomInfo);
 
     await axios.post(`${API_URL}/joinPlayer`, player);
     navigate(`game?room=${room}&name=${name}&team=${team}`);
@@ -101,7 +95,6 @@ export default function Home() {
     { label: "Team 2", value: "2" },
     { label: "観戦として参加", value: "3" },
   ];
-
   return (
     <Container pt={20} centerContent minH="100vh">
       <Card.Root>
@@ -159,4 +152,6 @@ export default function Home() {
       </Card.Root>
     </Container>
   );
-}
+};
+
+export default EnterRoomModal;
