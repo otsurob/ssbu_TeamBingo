@@ -3,12 +3,20 @@ export type CreateBingo = {
   team: string
 }
 
+export type CellResponse = {
+	id:        number
+	row:       number
+	col:       number
+	status:    number
+	character: number
+	bingoId:   number
+}
+
 export type ResponseBingo = {
   id:        number   
-	team :     number
-	locate:    number
-	status:   number
-	character: number
+  roomame: string
+  team: number
+  CellReses : CellResponse[]
 }
 
 export type Info = {
@@ -19,6 +27,7 @@ export type Info = {
 export type ResponsePlayer = {
   id:number
   name:string
+  roomName:string
   team:string
 }
 
