@@ -52,22 +52,17 @@ export default function Game() {
   }
 
   const deleteGame = async () => {
-    if (window.confirm("部屋を解散しますか？")) {
-      const fetchData = async () => {
-        const [roomRes, team1Res, team2Res] = await Promise.all([
-          axios.get(`${API_URL}/bingo?room=${room}`),
-          axios.get(`${API_URL}/player?room=${room}&team=1`),
-          axios.get(`${API_URL}/player?room=${room}&team=2`),
-        ]);
-        if (roomRes.data.length !== 0) {
-          axios.delete(`${API_URL}/${room}`);
-        }
-        if (team1Res.data.length !== 0 || team2Res.data.length !== 0) {
-          axios.delete(`${API_URL}/leavePlayer/${room}`);
+    if (window.confirm("ゲームを終了しますか？")) {
+      const deleteBingos = async () => {
+        const bingosRes = await axios.get<ResponseBingo[]>(
+          `${API_URL}/bingos?room=${room}`
+        );
+        if (bingosRes.data.length !== 0) {
+          axios.delete(`${API_URL}/bingos/${room}`);
         }
       };
-      fetchData();
-      navigate("/");
+      deleteBingos();
+      navigate(`/preGame?name=${name}&room=${room}`);
     }
   };
 
