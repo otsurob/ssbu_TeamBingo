@@ -1,15 +1,15 @@
-import { Button, Center, Flex, Spacer, Text } from '@chakra-ui/react'
-import { ResponseBingo, ResponsePlayer } from '../types'
-import { BingoTable } from './BingoTable'
+import { Button, Center, Flex, Spacer, Text } from "@chakra-ui/react";
+import { ResponseBingo, ResponsePlayer } from "../types";
+import { BingoTable } from "./BingoTable";
 
 type SmallBingoProps = {
-  bingos: ResponseBingo[]
-  team1Players: ResponsePlayer[]
-  team2Players: ResponsePlayer[]
-  deleteGame: () => void
-  exitGame: () => void
-  room: string
-}
+  bingos: ResponseBingo[];
+  team1Players: ResponsePlayer[];
+  team2Players: ResponsePlayer[];
+  deleteGame: () => void;
+  exitGame: () => void;
+  room: string;
+};
 
 export const SmallBingoTable = ({
   bingos,
@@ -33,7 +33,7 @@ export const SmallBingoTable = ({
         room={room}
         bingoTableSize="350px"
         bingoCellSize="70px"
-        teamNumber={1}
+        teamNumber={0}
       />
       <Spacer />
       <Button onClick={deleteGame}>終了</Button>
@@ -51,8 +51,8 @@ export const SmallBingoTable = ({
         room={room}
         bingoTableSize="350px"
         bingoCellSize="70px"
-        teamNumber={2}
+        teamNumber={1}
       />
     </Flex>
-  )
-}
+  );
+};

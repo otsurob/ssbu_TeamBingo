@@ -9,14 +9,14 @@ export type CellResponse = {
 	col:       number
 	status:    number
 	character: number
-	bingoId:   number
+	bingo_id:   number
 }
 
 export type ResponseBingo = {
   id:        number   
-  roomame: string
+  room_name: string
   team: number
-  CellReses : CellResponse[]
+  cell_reses : CellResponse[]
 }
 
 export type Info = {
@@ -27,8 +27,8 @@ export type Info = {
 export type ResponsePlayer = {
   id:number
   name:string
-  roomName:string
-  team:string
+  room_name:string
+  team:number
 }
 
 export type ResponseRoom = {

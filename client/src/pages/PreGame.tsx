@@ -51,7 +51,7 @@ const PreGame = () => {
     return <Spinner size="lg" />;
   }
 
-  if (bingos[0].CellReses && bingos[1].CellReses) {
+  if (bingos[0].cell_reses && bingos[1].cell_reses) {
     return (
       <Container pt={20} centerContent minH="100vh">
         <Card.Root>

@@ -26,17 +26,17 @@ type Cell struct {
 }
 
 type BingoResponse struct {
-	ID        uint
-	RoomName  string
-	Team      Team
-	CellReses []CellResponse
+	ID        uint           `json:"id"`
+	RoomName  string         `json:"room_name"`
+	Team      Team           `json:"team"`
+	CellReses []CellResponse `json:"cell_reses"`
 }
 
 type CellResponse struct {
-	ID        uint
-	Row       uint
-	Col       uint
-	Status    Status
-	Character uint
-	BingoId   uint
+	ID        uint   `json:"id"`
+	Row       uint   `json:"row"`
+	Col       uint   `json:"col"`
+	Status    Status `json:"status"`
+	Character uint   `json:"character"`
+	BingoId   uint   `json:"bingo_id"`
 }
