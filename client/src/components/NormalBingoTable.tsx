@@ -3,7 +3,8 @@ import { BingoTable } from "./BingoTable";
 import type { ResponseBingo, ResponsePlayer } from "../types";
 
 type NormalBingoProps = {
-  bingos: ResponseBingo[];
+  team1Bingo: ResponseBingo;
+  team2Bingo: ResponseBingo;
   team1Players: ResponsePlayer[];
   team2Players: ResponsePlayer[];
   deleteGame: () => void;
@@ -12,7 +13,8 @@ type NormalBingoProps = {
 };
 
 export const NormalBingoTable = ({
-  bingos,
+  team1Bingo,
+  team2Bingo,
   team1Players,
   team2Players,
   deleteGame,
@@ -23,11 +25,11 @@ export const NormalBingoTable = ({
     <Flex flexWrap="wrap" flexDirection="row" marginTop={30}>
       <Flex flexWrap="wrap" flexDirection="column">
         <BingoTable
-          bingoProps={bingos}
+          bingoProps={team1Bingo}
           room={room}
           bingoTableSize="500px"
           bingoCellSize="100px"
-          teamNumber={1}
+          teamNumber={0}
         />
         <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
           {team1Players?.map((player) => (
@@ -43,11 +45,11 @@ export const NormalBingoTable = ({
       <Spacer />
       <Flex flexWrap="wrap" flexDirection="column">
         <BingoTable
-          bingoProps={bingos}
+          bingoProps={team2Bingo}
           room={room}
           bingoTableSize="500px"
           bingoCellSize="100px"
-          teamNumber={2}
+          teamNumber={1}
         />
         <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
           {team2Players?.map((player) => (

@@ -65,7 +65,13 @@ const Lobby = () => {
                           <Dialog.ActionTrigger asChild>
                             <Button variant="outline">Cancel</Button>
                           </Dialog.ActionTrigger>
-                          <Button onClick={() => navigate("/game")}>
+                          <Button
+                            onClick={() =>
+                              navigate(
+                                `/preGame?name=${name}&room=${room.room_name}`
+                              )
+                            }
+                          >
                             Enter
                           </Button>
                         </Dialog.Footer>

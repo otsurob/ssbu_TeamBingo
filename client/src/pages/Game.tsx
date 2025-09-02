@@ -10,18 +10,15 @@ import type { ResponseBingo, ResponsePlayer } from "../types";
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
-  const [team1Players, setTeam1Players] = useState<ResponsePlayer[]>([]);
-  const [team2Players, setTeam2Players] = useState<ResponsePlayer[]>([]);
+  const [players, setPlayers] = useState<ResponsePlayer[]>([]);
   useEffect(() => {
     const fetchData = async () => {
-      const [bingoRes, team1Res, team2Res] = await Promise.all([
-        axios.get<ResponseBingo[]>(`${API_URL}/bingo?room=${room}`),
-        axios.get<ResponsePlayer[]>(`${API_URL}/player?room=${room}&team=1`),
-        axios.get<ResponsePlayer[]>(`${API_URL}/player?room=${room}&team=2`),
+      const [bingoRes, playerRes] = await Promise.all([
+        axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`),
+        axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`),
       ]);
       setBingos(bingoRes.data);
-      setTeam1Players(team1Res.data);
-      setTeam2Players(team2Res.data);
+      setPlayers(playerRes.data);
     };
 
     fetchData();
@@ -30,7 +27,6 @@ export default function Game() {
   const isWide = useMedia({ minWidth: "1000px" });
   const [searchParams] = useSearchParams();
   const room = searchParams.get("room");
-  const team = searchParams.get("team");
   const name = searchParams.get("name");
 
   const navigate = useNavigate();
@@ -40,39 +36,49 @@ export default function Game() {
     return null;
   }
 
+  if (bingos.length === 0 || players.length === 0) {
+    return <div>Loading...</div>;
+  }
+
+  const team1Players: ResponsePlayer[] = [];
+  const team2Players: ResponsePlayer[] = [];
+
+  for (const player of players) {
+    if (player.team === 0) {
+      team1Players.push(player);
+    } else {
+      team2Players.push(player);
+    }
+  }
+
   const deleteGame = async () => {
-    if (window.confirm("部屋を解散しますか？")) {
-      const fetchData = async () => {
-        const [roomRes, team1Res, team2Res] = await Promise.all([
-          axios.get(`${API_URL}/bingo?room=${room}`),
-          axios.get(`${API_URL}/player?room=${room}&team=1`),
-          axios.get(`${API_URL}/player?room=${room}&team=2`),
-        ]);
-        if (roomRes.data.length !== 0) {
-          axios.delete(`${API_URL}/${room}`);
-        }
-        if (team1Res.data.length !== 0 || team2Res.data.length !== 0) {
-          axios.delete(`${API_URL}/leavePlayer/${room}`);
+    if (window.confirm("ゲームを終了しますか？")) {
+      const deleteBingos = async () => {
+        const bingosRes = await axios.get<ResponseBingo[]>(
+          `${API_URL}/bingos?room=${room}`
+        );
+        if (bingosRes.data.length !== 0) {
+          axios.delete(`${API_URL}/bingos/${room}`);
         }
       };
-      fetchData();
-      navigate("/");
+      deleteBingos();
+      navigate(`/preGame?name=${name}&room=${room}`);
     }
   };
 
   const exitGame = async () => {
-    if (window.confirm("部屋は残したまま退出しますか？")) {
-      await axios
-        .get(`${API_URL}/player?room=${room}&team=${team}`)
-        .then(async (res) => {
-          if (res.data.length !== 0) {
-            await axios.delete(
-              `${API_URL}/leaveOnePlayer?room=${room}&name=${name}&team=${team}`
-            );
-          }
-        });
-      navigate("/");
-    }
+    // if (window.confirm("部屋は残したまま退出しますか？")) {
+    //   await axios
+    //     .get(`${API_URL}/player?room=${room}&team=${team}`)
+    //     .then(async (res) => {
+    //       if (res.data.length !== 0) {
+    //         await axios.delete(
+    //           `${API_URL}/leaveOnePlayer?room=${room}&name=${name}&team=${team}`
+    //         );
+    //       }
+    //     });
+    //   navigate("/");
+    // }
   };
 
   return (
@@ -87,7 +93,8 @@ export default function Game() {
         <>
           {isWide ? (
             <NormalBingoTable
-              bingos={bingos}
+              team1Bingo={bingos[0]}
+              team2Bingo={bingos[1]}
               team1Players={team1Players}
               team2Players={team2Players}
               deleteGame={deleteGame}
@@ -96,7 +103,8 @@ export default function Game() {
             />
           ) : (
             <SmallBingoTable
-              bingos={bingos}
+              team1Bingo={bingos[0]}
+              team2Bingo={bingos[1]}
               team1Players={team1Players}
               team2Players={team2Players}
               deleteGame={deleteGame}

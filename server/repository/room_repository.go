@@ -12,7 +12,7 @@ type IRoomRepository interface {
 	GetAllRooms(rooms *[]domain.Room) error
 	CreateRoom(room *domain.Room) error
 	DeleteRoom(roomName string) error
-	GetTeamPlayers(players *[]domain.Player, room string, team uint) error
+	GetPlayers(players *[]domain.Player, room string) error
 	CreatePlayer(player *domain.Player) error
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string, team uint) error
@@ -58,8 +58,8 @@ func (rr *roomRepository) DeleteRoom(roomName string) error {
 	return nil
 }
 
-func (rr *roomRepository) GetTeamPlayers(players *[]domain.Player, room string, team uint) error {
-	if err := rr.db.Where("room_name=? AND team=?", room, team).Find(players).Error; err != nil {
+func (rr *roomRepository) GetPlayers(players *[]domain.Player, room string) error {
+	if err := rr.db.Where("room_name=?", room).Find(players).Error; err != nil {
 		return err
 	}
 	return nil

@@ -31,7 +31,7 @@ func NewRouter(bc controller.IBingoController, rc controller.IRoomController) *e
 	e.POST("/createRoom", rc.CreateRoom)
 	e.DELETE("/deleteRoom/:room", rc.DeleteRoom)
 	e.GET("roomPassword", rc.CheckRoomPassword)
-	e.GET("/players", rc.GetTeamPlayers)
+	e.GET("/players", rc.GetPlayers)
 	e.POST("/joinPlayer", rc.CreatePlayer)
 	e.DELETE("/leavePlayer/:room", rc.DeletePlayer)
 	e.DELETE("/leaveOnePlayer", rc.DeleteOnePlayer)
