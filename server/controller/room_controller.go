@@ -17,6 +17,8 @@ type IRoomController interface {
 	CheckRoomPassword(c echo.Context) error
 	GetPlayers(c echo.Context) error
 	CreatePlayer(c echo.Context) error
+	UpdatePlayerTeam(c echo.Context) error
+	DividePlayerTeam(c echo.Context) error
 	DeletePlayer(c echo.Context) error
 	DeleteOnePlayer(c echo.Context) error
 }
@@ -102,6 +104,34 @@ func (rc *roomController) CreatePlayer(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, playerRes)
+}
+
+func (rc *roomController) UpdatePlayerTeam(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	name := c.QueryParam("name")
+	player := domain.Player{}
+	if err := c.Bind(&player); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	playerRes, err := rc.ru.UpdatePlayerTeam(player, name, roomName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, playerRes)
+}
+
+func (rc *roomController) DividePlayerTeam(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	//updateなのに&Bindしなくていいの？
+	// cell := domain.Cell{}
+	// if err := c.Bind(&cell); err != nil {
+	// 	return c.JSON(http.StatusBadRequest, err.Error())
+	// }
+	playerReses, err := rc.ru.DividePlayerTeam(roomName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, playerReses)
 }
 
 func (rc *roomController) DeletePlayer(c echo.Context) error {

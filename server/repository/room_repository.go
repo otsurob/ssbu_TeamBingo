@@ -5,6 +5,7 @@ import (
 	"server/domain"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type IRoomRepository interface {
@@ -12,10 +13,11 @@ type IRoomRepository interface {
 	GetAllRooms(rooms *[]domain.Room) error
 	CreateRoom(room *domain.Room) error
 	DeleteRoom(roomName string) error
-	GetPlayers(players *[]domain.Player, room string) error
+	GetPlayers(players *[]domain.Player, roomName string) error
 	CreatePlayer(player *domain.Player) error
-	DeletePlayer(room string) error
-	DeleteOnePlayer(room string, name string, team uint) error
+	UpdatePlayerTeam(player *domain.Player, roomName string, name string) error
+	DeletePlayer(roomName string) error
+	DeleteOnePlayer(roomName string, name string, team uint) error
 }
 
 type roomRepository struct {
@@ -58,8 +60,8 @@ func (rr *roomRepository) DeleteRoom(roomName string) error {
 	return nil
 }
 
-func (rr *roomRepository) GetPlayers(players *[]domain.Player, room string) error {
-	if err := rr.db.Where("room_name=?", room).Find(players).Error; err != nil {
+func (rr *roomRepository) GetPlayers(players *[]domain.Player, roomName string) error {
+	if err := rr.db.Where("room_name=?", roomName).Find(players).Error; err != nil {
 		return err
 	}
 	return nil
@@ -72,8 +74,8 @@ func (rr *roomRepository) CreatePlayer(player *domain.Player) error {
 	return nil
 }
 
-func (rr *roomRepository) DeletePlayer(room string) error {
-	result := rr.db.Where("room_name=?", room).Delete(&domain.Player{})
+func (rr *roomRepository) UpdatePlayerTeam(player *domain.Player, roomName string, name string) error {
+	result := rr.db.Model(player).Clauses(clause.Returning{}).Where("room_name=? AND name=?", roomName, name).Update("team", player.Team)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -83,8 +85,19 @@ func (rr *roomRepository) DeletePlayer(room string) error {
 	return nil
 }
 
-func (rr *roomRepository) DeleteOnePlayer(room string, name string, team uint) error {
-	result := rr.db.Where("room_name=? AND name=? AND team=?", room, name, team).Delete(&domain.Player{})
+func (rr *roomRepository) DeletePlayer(roomName string) error {
+	result := rr.db.Where("room_name=?", roomName).Delete(&domain.Player{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected < 1 {
+		return fmt.Errorf("object does not exist")
+	}
+	return nil
+}
+
+func (rr *roomRepository) DeleteOnePlayer(roomName string, name string, team uint) error {
+	result := rr.db.Where("room_name=? AND name=? AND team=?", roomName, name, team).Delete(&domain.Player{})
 	if result.Error != nil {
 		return result.Error
 	}

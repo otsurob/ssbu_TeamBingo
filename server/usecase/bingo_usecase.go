@@ -65,6 +65,7 @@ func (bu *bingoUsecase) GetTwoBingos(roomName string) ([]domain.BingoResponse, e
 }
 
 func (bu *bingoUsecase) CreateBingos(bingo domain.Bingo) ([]domain.BingoResponse, error) {
+	// これここで宣言して大丈夫？後半で追加処理しかしてないから2ビンゴ分追加されそう
 	resBingos := []domain.BingoResponse{}
 	Team := []domain.Team{domain.TeamA, domain.TeamB}
 
@@ -73,7 +74,7 @@ func (bu *bingoUsecase) CreateBingos(bingo domain.Bingo) ([]domain.BingoResponse
 		return nil, err
 	}
 	for _, team := range Team {
-		characterNumber := domain.RandomGenerator()
+		characterNumber := domain.RandomBingoGenerator()
 
 		newBingo := domain.Bingo{
 			RoomName: bingo.RoomName,
