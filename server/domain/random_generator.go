@@ -8,7 +8,7 @@ const BINGO_CENTER = 12
 const CHARACTER_MAX = 86
 const BINGO_SIZE = 25
 
-func RandomGenerator() []int {
+func RandomBingoGenerator() []int {
 	var check [CHARACTER_MAX]bool
 	var characterNumber []int
 	for len(characterNumber) < BINGO_SIZE {
@@ -19,4 +19,13 @@ func RandomGenerator() []int {
 		}
 	}
 	return characterNumber
+}
+
+func RandomTeamSepalator(players []Player) []Player {
+	playerReses := append([]Player(nil), players...)
+	for i := len(players) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		playerReses[i], playerReses[j] = playerReses[j], playerReses[i]
+	}
+	return playerReses
 }

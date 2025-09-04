@@ -13,6 +13,8 @@ type IRoomUsecase interface {
 	CheckRoomPassword(roomName string, password string) (bool, error)
 	GetPlayers(room string) ([]domain.PlayerResponse, error)
 	CreatePlayer(player domain.Player, roomName string) (domain.PlayerResponse, error)
+	UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error)
+	DividePlayerTeam(roomName string) ([]domain.PlayerResponse, error)
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string, team uint) error
 }
@@ -120,6 +122,44 @@ func (ru *roomUsecase) CreatePlayer(player domain.Player, roomName string) (doma
 		Team:     player.Team,
 	}
 	return resPlayer, nil
+}
+
+func (ru *roomUsecase) UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error) {
+	if err := ru.rr.UpdatePlayerTeam(&player, roomName, name); err != nil {
+		return domain.PlayerResponse{}, err
+	}
+	playerRes := domain.PlayerResponse{
+		ID:       player.ID,
+		Name:     player.Name,
+		RoomName: player.RoomName,
+		Team:     player.Team,
+	}
+	return playerRes, nil
+}
+
+func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerResponse, error) {
+	//部屋のプレイヤー一覧を取得
+	players := []domain.Player{}
+	if err := ru.rr.GetPlayers(&players, roomName); err != nil {
+		return []domain.PlayerResponse{}, err
+	}
+	playerReses := []domain.PlayerResponse{}
+	newPlayers := domain.RandomTeamSepalator(players)
+	for i, v := range newPlayers {
+		v.Team = domain.Team(i % 2)
+		// TODO:トランザクションないとやばめ
+		if err := ru.rr.UpdatePlayerTeam(&v, roomName, v.Name); err != nil {
+			return []domain.PlayerResponse{}, err
+		}
+		playerRes := domain.PlayerResponse{
+			ID:       v.ID,
+			Name:     v.Name,
+			RoomName: v.RoomName,
+			Team:     v.Team,
+		}
+		playerReses = append(playerReses, playerRes)
+	}
+	return playerReses, nil
 }
 
 func (ru *roomUsecase) DeletePlayer(roomName string) error {
