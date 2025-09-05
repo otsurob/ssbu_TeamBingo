@@ -13,6 +13,8 @@ import {
   Text,
 } from "@chakra-ui/react";
 import TeamSelection from "../components/TeamSelection";
+import { isPlayerExisting, isRoomExisting } from "../services/existing";
+import { toaster } from "../components/ui/toaster";
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -39,13 +41,28 @@ const PreGame = () => {
     return <></>;
   }
 
+  const showToast = (title: string) => {
+    toaster.create({
+      title: title,
+      type: "error",
+      closable: true,
+      // placement: "top",
+    });
+  };
+
   const startGame = async () => {
+    if (!(await isRoomExisting(room))) {
+      showToast("部屋が存在しません");
+      return;
+    }
     //ビンゴ生成・チーム振り分け処理
     await axios
       .get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`)
       .then(async (res) => {
         if (res.data.length !== 0) {
           //ビンゴが生成されています！
+          window.location.reload();
+          return;
         }
       });
     await axios.post(`${API_URL}/createBingo`, { room_name: room });
@@ -58,12 +75,17 @@ const PreGame = () => {
   };
 
   const leaveRoom = async () => {
-    await axios.delete(`${API_URL}/leaveOePlayer?room=${room}&name=${name}`);
+    if (!window.confirm("部屋を抜けますか？")) return;
+    if (!(await isPlayerExisting)) {
+      await axios.delete(`${API_URL}/leaveOePlayer?room=${room}&name=${name}`);
+    }
     navigate(`/lobby?name=${name}`);
   };
 
   const deleteRoom = async () => {
-    await axios.delete(`${API_URL}/deleteRoom/${room}`);
+    if (!(await isRoomExisting)) {
+      await axios.delete(`${API_URL}/deleteRoom/${room}`);
+    }
     navigate(`/lobby?name=${name}`);
   };
 
