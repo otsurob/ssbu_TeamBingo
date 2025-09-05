@@ -33,7 +33,7 @@ export default function Game() {
 
   if (!room || !name) {
     navigate("/");
-    return null;
+    return;
   }
 
   if (bingos.length === 0 || players.length === 0) {
@@ -52,18 +52,14 @@ export default function Game() {
   }
 
   const deleteGame = async () => {
-    if (window.confirm("ゲームを終了しますか？")) {
-      const deleteBingos = async () => {
-        const bingosRes = await axios.get<ResponseBingo[]>(
-          `${API_URL}/bingos?room=${room}`
-        );
-        if (bingosRes.data.length !== 0) {
-          axios.delete(`${API_URL}/bingos/${room}`);
-        }
-      };
-      deleteBingos();
-      navigate(`/preGame?name=${name}&room=${room}`);
+    if (!window.confirm("ゲームを終了しますか？")) return;
+    const bingosRes = await axios.get<ResponseBingo[]>(
+      `${API_URL}/bingos?room=${room}`
+    );
+    if (bingosRes.data.length !== 0) {
+      axios.delete(`${API_URL}/bingos/${room}`);
     }
+    navigate(`/preGame?name=${name}&room=${room}`);
   };
 
   const exitGame = async () => {

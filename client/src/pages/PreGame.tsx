@@ -7,12 +7,12 @@ import {
   Button,
   Card,
   CardBody,
-  Center,
+  CardFooter,
   Container,
-  Flex,
   Spinner,
   Text,
 } from "@chakra-ui/react";
+import TeamSelection from "../components/TeamSelection";
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -34,6 +34,11 @@ const PreGame = () => {
   const navigate = useNavigate();
   console.log("bingos!", bingos);
 
+  if (!room || !name) {
+    navigate("/");
+    return <></>;
+  }
+
   const startGame = async () => {
     //ビンゴ生成・チーム振り分け処理
     await axios
@@ -45,6 +50,21 @@ const PreGame = () => {
       });
     await axios.post(`${API_URL}/createBingo`, { room_name: room });
     navigate(`/game?name=${name}&room=${room}`);
+  };
+
+  const randomTeam = async () => {
+    if (!window.confirm("チームをランダムに振り分けます")) return;
+    await axios.put(`${API_URL}/dividePlayers?room=${room}`);
+  };
+
+  const leaveRoom = async () => {
+    await axios.delete(`${API_URL}/leaveOePlayer?room=${room}&name=${name}`);
+    navigate(`/lobby?name=${name}`);
+  };
+
+  const deleteRoom = async () => {
+    await axios.delete(`${API_URL}/deleteRoom/${room}`);
+    navigate(`/lobby?name=${name}`);
   };
 
   if (bingos.length === 0) {
@@ -71,17 +91,20 @@ const PreGame = () => {
   return (
     <Container pt={20} centerContent minH="100vh">
       <Card.Root>
-        <CardBody>
-          <Text fontSize="2xl">Tinpo!!!</Text>
-          <Button onClick={startGame}>ゲームを開始します！</Button>
-          <Flex flexWrap="wrap" flexDirection="row" marginTop="15px">
-            {players?.map((player) => (
-              <Center w="250px" h="30px" key={player.id} padding="30px">
-                <Text fontSize="sm">{player.name}</Text>
-              </Center>
-            ))}
-          </Flex>
+        <CardBody gap="5">
+          <Text textStyle="xl" fontWeight="bold">
+            ゲーム開始前です！
+          </Text>
+          <Button onClick={startGame}>ゲーム開始</Button>
+          <Button onClick={randomTeam}>ランダムチーム振り分け</Button>
+          <TeamSelection players={players} name={name} />
         </CardBody>
+        <CardFooter display="flex" justifyContent="space-between" gap={2}>
+          <Button onClick={leaveRoom}>退出</Button>
+          <Button colorPalette="red" onClick={deleteRoom}>
+            削除
+          </Button>
+        </CardFooter>
       </Card.Root>
     </Container>
   );
