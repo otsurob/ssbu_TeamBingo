@@ -13,6 +13,7 @@ type IRoomRepository interface {
 	GetAllRooms(rooms *[]domain.Room) error
 	CreateRoom(room *domain.Room) error
 	DeleteRoom(roomName string) error
+	GetPlayer(plauers *domain.Player, roomName string, name string) error
 	GetPlayers(players *[]domain.Player, roomName string) error
 	CreatePlayer(player *domain.Player) error
 	UpdatePlayerTeam(player *domain.Player, roomName string, name string) error
@@ -56,6 +57,13 @@ func (rr *roomRepository) DeleteRoom(roomName string) error {
 	}
 	if result.RowsAffected < 1 {
 		return fmt.Errorf("object does not exist")
+	}
+	return nil
+}
+
+func (rr *roomRepository) GetPlayer(player *domain.Player, roomName string, name string) error {
+	if err := rr.db.Where("room_name=? AND name=?", roomName, name).Find(player).Error; err != nil {
+		return err
 	}
 	return nil
 }
