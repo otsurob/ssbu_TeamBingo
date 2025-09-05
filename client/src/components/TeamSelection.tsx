@@ -4,9 +4,10 @@ import type { ResponsePlayer } from "../types";
 type TeamSelectionProps = {
   players: ResponsePlayer[];
   name: string;
+  onChangeTeam?: (name: string, team: number) => void | Promise<void>;
 };
 
-const TeamSelection = ({ players, name }: TeamSelectionProps) => {
+const TeamSelection = ({ players, name, onChangeTeam }: TeamSelectionProps) => {
   const items = [
     { label: "TeamA", value: "0" },
     { label: "TeamB", value: "1" },
@@ -19,7 +20,14 @@ const TeamSelection = ({ players, name }: TeamSelectionProps) => {
         <Center h="30px" key={player.id} padding="30px">
           <Flex flexDirection="row">
             <Text fontSize="2xl">{player.name}</Text>
-            <RadioGroup.Root defaultValue={player.team.toString()}>
+            <RadioGroup.Root
+              value={player.team.toString()}
+              // 変更があったときの処理
+              onValueChange={({ value }) => {
+                const team = Number(value);
+                onChangeTeam?.(player.name, team);
+              }}
+            >
               <HStack gap="6">
                 {items.map((item) => (
                   <RadioGroup.Item
