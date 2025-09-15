@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"server/domain"
 	"server/usecase"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -15,6 +14,7 @@ type IRoomController interface {
 	CreateRoom(c echo.Context) error
 	DeleteRoom(c echo.Context) error
 	CheckRoomPassword(c echo.Context) error
+	GetPlayer(c echo.Context) error
 	GetPlayers(c echo.Context) error
 	CreatePlayer(c echo.Context) error
 	UpdatePlayerTeam(c echo.Context) error
@@ -80,16 +80,26 @@ func (rc *roomController) CheckRoomPassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, roomPasswordRes)
 }
 
+func (rc *roomController) GetPlayer(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	name := c.QueryParam("name")
+	playerRes, err := rc.ru.GetPlayer(roomName, name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, playerRes)
+}
+
 func (rc *roomController) GetPlayers(c echo.Context) error {
 	roomName := c.QueryParam("room")
 	// 前の変更　チームいらんくね？
 	// team := c.QueryParam("team")
 	// teamNumber, _ := strconv.Atoi(team)
-	playersRes, err := rc.ru.GetPlayers(roomName)
+	playersReses, err := rc.ru.GetPlayers(roomName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, playersRes)
+	return c.JSON(http.StatusOK, playersReses)
 }
 
 func (rc *roomController) CreatePlayer(c echo.Context) error {
@@ -147,10 +157,8 @@ func (rc *roomController) DeletePlayer(c echo.Context) error {
 func (rc *roomController) DeleteOnePlayer(c echo.Context) error {
 	roomName := c.QueryParam("room")
 	name := c.QueryParam("name")
-	team := c.QueryParam("team")
-	teamNumber, _ := strconv.Atoi(team)
 
-	err := rc.ru.DeleteOnePlayer(roomName, name, uint(teamNumber))
+	err := rc.ru.DeleteOnePlayer(roomName, name)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

@@ -46,7 +46,7 @@ export default function Game() {
   for (const player of players) {
     if (player.team === 0) {
       team1Players.push(player);
-    } else {
+    } else if (player.team === 1) {
       team2Players.push(player);
     }
   }
@@ -75,6 +75,7 @@ export default function Game() {
     //     });
     //   navigate("/");
     // }
+    window.confirm("このボタンに意味はないよ！ｗ");
   };
 
   return (

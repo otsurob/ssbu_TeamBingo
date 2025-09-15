@@ -11,12 +11,13 @@ type IRoomUsecase interface {
 	CreateRoom(room domain.Room) (domain.RoomResponse, error)
 	DeleteRoom(roomName string) error
 	CheckRoomPassword(roomName string, password string) (bool, error)
+	GetPlayer(roomName string, name string) (domain.PlayerResponse, error)
 	GetPlayers(room string) ([]domain.PlayerResponse, error)
 	CreatePlayer(player domain.Player, roomName string) (domain.PlayerResponse, error)
 	UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error)
 	DividePlayerTeam(roomName string) ([]domain.PlayerResponse, error)
 	DeletePlayer(room string) error
-	DeleteOnePlayer(room string, name string, team uint) error
+	DeleteOnePlayer(room string, name string) error
 }
 
 type roomUsecase struct {
@@ -85,6 +86,20 @@ func (ru *roomUsecase) CheckRoomPassword(roomName string, password string) (bool
 		return true, nil
 	}
 	return false, nil
+}
+
+func (ru *roomUsecase) GetPlayer(roomName string, name string) (domain.PlayerResponse, error) {
+	player := domain.Player{}
+	if err := ru.rr.GetPlayer(&player, roomName, name); err != nil {
+		return domain.PlayerResponse{}, err
+	}
+	resPlayer := domain.PlayerResponse{
+		ID:       player.ID,
+		Name:     player.Name,
+		RoomName: player.RoomName,
+		Team:     player.Team,
+	}
+	return resPlayer, nil
 }
 
 func (ru *roomUsecase) GetPlayers(roomName string) ([]domain.PlayerResponse, error) {
@@ -169,8 +184,8 @@ func (ru *roomUsecase) DeletePlayer(roomName string) error {
 	return nil
 }
 
-func (ru *roomUsecase) DeleteOnePlayer(roomName string, name string, team uint) error {
-	if err := ru.rr.DeleteOnePlayer(roomName, name, team); err != nil {
+func (ru *roomUsecase) DeleteOnePlayer(roomName string, name string) error {
+	if err := ru.rr.DeleteOnePlayer(roomName, name); err != nil {
 		return err
 	}
 	return nil

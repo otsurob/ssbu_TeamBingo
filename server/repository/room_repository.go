@@ -13,11 +13,12 @@ type IRoomRepository interface {
 	GetAllRooms(rooms *[]domain.Room) error
 	CreateRoom(room *domain.Room) error
 	DeleteRoom(roomName string) error
+	GetPlayer(plauers *domain.Player, roomName string, name string) error
 	GetPlayers(players *[]domain.Player, roomName string) error
 	CreatePlayer(player *domain.Player) error
 	UpdatePlayerTeam(player *domain.Player, roomName string, name string) error
 	DeletePlayer(roomName string) error
-	DeleteOnePlayer(roomName string, name string, team uint) error
+	DeleteOnePlayer(roomName string, name string) error
 }
 
 type roomRepository struct {
@@ -60,6 +61,13 @@ func (rr *roomRepository) DeleteRoom(roomName string) error {
 	return nil
 }
 
+func (rr *roomRepository) GetPlayer(player *domain.Player, roomName string, name string) error {
+	if err := rr.db.Where("room_name=? AND name=?", roomName, name).Find(player).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (rr *roomRepository) GetPlayers(players *[]domain.Player, roomName string) error {
 	if err := rr.db.Where("room_name=?", roomName).Find(players).Error; err != nil {
 		return err
@@ -96,8 +104,8 @@ func (rr *roomRepository) DeletePlayer(roomName string) error {
 	return nil
 }
 
-func (rr *roomRepository) DeleteOnePlayer(roomName string, name string, team uint) error {
-	result := rr.db.Where("room_name=? AND name=? AND team=?", roomName, name, team).Delete(&domain.Player{})
+func (rr *roomRepository) DeleteOnePlayer(roomName string, name string) error {
+	result := rr.db.Where("room_name=? AND name=?", roomName, name).Delete(&domain.Player{})
 	if result.Error != nil {
 		return result.Error
 	}
