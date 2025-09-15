@@ -10,6 +10,7 @@ import {
   CardFooter,
   Container,
   Flex,
+  Spacer,
   Spinner,
   Text,
 } from "@chakra-ui/react";
@@ -90,20 +91,22 @@ const PreGame = () => {
 
   const leaveRoom = async () => {
     if (!window.confirm("部屋を抜けますか？")) return;
-    if (!(await isPlayerExisting)) {
-      await axios.delete(`${API_URL}/leaveOePlayer?room=${room}&name=${name}`);
+    if (await isPlayerExisting) {
+      await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
     }
     navigate(`/lobby?name=${name}`);
   };
 
   const deleteRoom = async () => {
-    if (!(await isRoomExisting)) {
+    if (!window.confirm("部屋を解散しますか？")) return;
+    if (await isRoomExisting) {
       await axios.delete(`${API_URL}/deleteRoom/${room}`);
     }
     navigate(`/lobby?name=${name}`);
   };
 
-  const handleChangeTeam = async (name: string, team: number) => {
+  // name, room はクエリパラメータから取得する。バグったら修正
+  const handleChangeTeam = async (team: number) => {
     // TODO:リロードしないとチームの変更は反映されない
     if (!window.confirm("チームを変更しますか？")) return;
     await axios.put(`${API_URL}/updatePlayerTeam?name=${name}&room=${room}`, {
@@ -135,8 +138,9 @@ const PreGame = () => {
             </Button>
             <Text textStyle="md">チームを指定して参加</Text>
             <Flex flexWrap="wrap" flexDirection="row">
-              <Button>0</Button>
-              <Button>1</Button>
+              <Button onClick={() => handleChangeTeam(0)}>チーム：0</Button>
+              <Spacer />
+              <Button onClick={() => handleChangeTeam(1)}>チーム：1</Button>
             </Flex>
           </CardBody>
         </Card.Root>

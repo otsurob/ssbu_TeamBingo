@@ -18,7 +18,7 @@ type IRoomRepository interface {
 	CreatePlayer(player *domain.Player) error
 	UpdatePlayerTeam(player *domain.Player, roomName string, name string) error
 	DeletePlayer(roomName string) error
-	DeleteOnePlayer(roomName string, name string, team uint) error
+	DeleteOnePlayer(roomName string, name string) error
 }
 
 type roomRepository struct {
@@ -104,8 +104,8 @@ func (rr *roomRepository) DeletePlayer(roomName string) error {
 	return nil
 }
 
-func (rr *roomRepository) DeleteOnePlayer(roomName string, name string, team uint) error {
-	result := rr.db.Where("room_name=? AND name=? AND team=?", roomName, name, team).Delete(&domain.Player{})
+func (rr *roomRepository) DeleteOnePlayer(roomName string, name string) error {
+	result := rr.db.Where("room_name=? AND name=?", roomName, name).Delete(&domain.Player{})
 	if result.Error != nil {
 		return result.Error
 	}

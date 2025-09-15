@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"server/domain"
 	"server/usecase"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -158,10 +157,8 @@ func (rc *roomController) DeletePlayer(c echo.Context) error {
 func (rc *roomController) DeleteOnePlayer(c echo.Context) error {
 	roomName := c.QueryParam("room")
 	name := c.QueryParam("name")
-	team := c.QueryParam("team")
-	teamNumber, _ := strconv.Atoi(team)
 
-	err := rc.ru.DeleteOnePlayer(roomName, name, uint(teamNumber))
+	err := rc.ru.DeleteOnePlayer(roomName, name)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

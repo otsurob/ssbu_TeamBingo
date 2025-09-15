@@ -23,6 +23,7 @@ const Lobby = () => {
   const [room, setRoom] = useState<string>("");
   const [rooms, setRooms] = useState<ResponseRoom[]>();
   const [password, setPassword] = useState<string>("");
+  //部屋作成用の変数
   const [newRoom, setNewRoom] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
 
@@ -83,6 +84,11 @@ const Lobby = () => {
     console.log(isValidPasswordRes, password, room);
     if (isValidPasswordRes.data) {
       //joinplayer
+      await axios.post(`${API_URL}/joinPlayer?room=${room}`, {
+        name: name,
+        team: 2,
+        room_name: room,
+      });
       navigate(`/preGame?name=${name}&room=${room}`);
     } else {
       showToast("パスワードが間違っています");
@@ -90,6 +96,10 @@ const Lobby = () => {
       // window.location.reload();
     }
   };
+
+  if (!rooms) {
+    return <div>Loading...</div>;
+  }
 
   // console.log(rooms);
   return (
@@ -136,7 +146,7 @@ const Lobby = () => {
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
-      {rooms ? (
+      {rooms?.length !== 0 ? (
         <>
           {rooms.map((room) => (
             <Card.Root key={room.id} size="lg">

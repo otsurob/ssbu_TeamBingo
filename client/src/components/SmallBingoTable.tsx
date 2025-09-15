@@ -1,9 +1,10 @@
 import { Button, Center, Flex, Spacer, Text } from "@chakra-ui/react";
-import { ResponseBingo, ResponsePlayer } from "../types";
+import type { ResponseBingo, ResponsePlayer } from "../types";
 import { BingoTable } from "./BingoTable";
 
 type SmallBingoProps = {
-  bingos: ResponseBingo[];
+  team1Bingo: ResponseBingo;
+  team2Bingo: ResponseBingo;
   team1Players: ResponsePlayer[];
   team2Players: ResponsePlayer[];
   deleteGame: () => void;
@@ -12,7 +13,8 @@ type SmallBingoProps = {
 };
 
 export const SmallBingoTable = ({
-  bingos,
+  team1Bingo,
+  team2Bingo,
   team1Players,
   team2Players,
   deleteGame,
@@ -29,7 +31,7 @@ export const SmallBingoTable = ({
         ))}
       </Flex>
       <BingoTable
-        bingoProps={bingos}
+        bingoProps={team1Bingo}
         room={room}
         bingoTableSize="350px"
         bingoCellSize="70px"
@@ -47,7 +49,7 @@ export const SmallBingoTable = ({
         ))}
       </Flex>
       <BingoTable
-        bingoProps={bingos}
+        bingoProps={team2Bingo}
         room={room}
         bingoTableSize="350px"
         bingoCellSize="70px"

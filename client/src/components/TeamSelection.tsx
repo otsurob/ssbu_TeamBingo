@@ -4,7 +4,7 @@ import type { ResponsePlayer } from "../types";
 type TeamSelectionProps = {
   players: ResponsePlayer[];
   name: string;
-  onChangeTeam?: (name: string, team: number) => void | Promise<void>;
+  onChangeTeam?: (team: number) => void | Promise<void>;
 };
 
 const TeamSelection = ({ players, name, onChangeTeam }: TeamSelectionProps) => {
@@ -25,7 +25,7 @@ const TeamSelection = ({ players, name, onChangeTeam }: TeamSelectionProps) => {
               // 変更があったときの処理
               onValueChange={({ value }) => {
                 const team = Number(value);
-                onChangeTeam?.(player.name, team);
+                onChangeTeam?.(team);
               }}
             >
               <HStack gap="6">
