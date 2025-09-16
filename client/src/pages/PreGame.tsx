@@ -8,8 +8,12 @@ import {
   Card,
   CardBody,
   CardFooter,
+  CloseButton,
   Container,
+  Dialog,
   Flex,
+  Input,
+  Portal,
   Spacer,
   Spinner,
   Text,
@@ -26,6 +30,8 @@ const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
   const [players, setPlayers] = useState<ResponsePlayer[]>([]);
   const [player, setPlayer] = useState<ResponsePlayer>();
+  //名前変更用変数
+  const [newName, setNewName] = useState<string>("");
   useEffect(() => {
     const fetchData = async () => {
       const [bingosRes, playersRes, playerRes] = await Promise.all([
@@ -45,7 +51,7 @@ const PreGame = () => {
   const name = searchParams.get("name");
   const room = searchParams.get("room");
   const navigate = useNavigate();
-  console.log("bingos!", bingos);
+  // console.log("bingos!", bingos);
 
   if (!room || !name) {
     navigate("/");
@@ -114,13 +120,31 @@ const PreGame = () => {
     });
   };
 
+  const changeName = async () => {
+    if (newName.length > 20) {
+      showToast("名前が長すぎます！");
+      return;
+    }
+    if (await isPlayerExisting) {
+      await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+    }
+    await axios.post(`${API_URL}/joinPlayer?room=${room}`, {
+      name: newName,
+      team: 2,
+      room_name: room,
+    });
+    navigate(`/preGame?name=${newName}&room=${room}`);
+    //リロードするかなんかしたいよね
+    window.location.reload();
+  };
+
   if (bingos.length === 0) {
     return <Spinner size="lg" />;
   }
 
   if (bingos[0].cell_reses && bingos[1].cell_reses) {
     return (
-      <Container pt={20} centerContent minH="100vh">
+      <Container pt={20} centerContent w="350px">
         <Card.Root>
           <CardBody>
             <Text textStyle="xl" fontWeight="bold">
@@ -149,12 +173,55 @@ const PreGame = () => {
   }
 
   return (
-    <Container pt={20} centerContent minH="100vh">
+    <Container pt={20} centerContent w="350px">
       <Card.Root>
-        <CardBody gap="5">
+        <Card.Header
+          display="flex"
+          flexDir="row"
+          justifyContent="space-between"
+          gap={2}
+        >
           <Text textStyle="xl" fontWeight="bold">
             ゲーム開始前です！
           </Text>
+          {/* <Button colorPalette="orange">名前を変える</Button> */}
+          <Dialog.Root
+            placement="center"
+            motionPreset="slide-in-bottom"
+            modal={true}
+          >
+            <Dialog.Trigger asChild>
+              <Button colorPalette="orange">名前を変更</Button>
+            </Dialog.Trigger>
+            <Portal>
+              <Dialog.Backdrop />
+              <Dialog.Positioner>
+                <Dialog.Content>
+                  <Dialog.Header>
+                    <Dialog.Title>新しい名前を入力してください</Dialog.Title>
+                  </Dialog.Header>
+                  <Dialog.Body>
+                    <Input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
+                  </Dialog.Body>
+                  <Dialog.Footer>
+                    <Dialog.ActionTrigger asChild>
+                      <Button variant="outline">Cancel</Button>
+                    </Dialog.ActionTrigger>
+                    <Button onClick={changeName}>Enter</Button>
+                  </Dialog.Footer>
+                  <Dialog.CloseTrigger asChild>
+                    <CloseButton size="md" />
+                  </Dialog.CloseTrigger>
+                </Dialog.Content>
+              </Dialog.Positioner>
+            </Portal>
+          </Dialog.Root>
+        </Card.Header>
+        <CardBody gap="5">
           <Button onClick={startGame}>ゲーム開始</Button>
           <Button onClick={randomTeam}>ランダムチーム振り分け</Button>
           <TeamSelection
