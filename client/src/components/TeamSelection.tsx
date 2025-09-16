@@ -11,7 +11,7 @@ const TeamSelection = ({ players, name, onChangeTeam }: TeamSelectionProps) => {
   const items = [
     { label: "A", value: "0" },
     { label: "B", value: "1" },
-    { label: "×", value: "2" },
+    { label: "x", value: "2" },
   ];
 
   return (

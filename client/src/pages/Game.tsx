@@ -7,6 +7,7 @@ import { NormalBingoTable } from "../components/NormalBingoTable";
 import { API_URL } from "../constants/constants";
 import { Button, Center } from "@chakra-ui/react";
 import type { ResponseBingo, ResponsePlayer } from "../types";
+import { isPlayerExisting } from "../services/existing";
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -76,7 +77,9 @@ export default function Game() {
     //   navigate("/");
     // }
     if (!window.confirm("部屋から退出します。よろしいですか？")) return;
-    // deleteOnePlayer
+    if (await isPlayerExisting) {
+      await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+    }
     navigate(`/lobby?name=${name}`);
   };
 
