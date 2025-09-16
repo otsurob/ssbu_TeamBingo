@@ -9,18 +9,19 @@ type TeamSelectionProps = {
 
 const TeamSelection = ({ players, name, onChangeTeam }: TeamSelectionProps) => {
   const items = [
-    { label: "TeamA", value: "0" },
-    { label: "TeamB", value: "1" },
-    { label: "不参加", value: "2" },
+    { label: "A", value: "0" },
+    { label: "B", value: "1" },
+    { label: "x", value: "2" },
   ];
 
   return (
     <Flex flexWrap="wrap" flexDirection="column" marginTop="15px">
       {players?.map((player) => (
-        <Center h="30px" key={player.id} padding="30px">
+        <Center key={player.id} padding="10px">
           <Flex flexDirection="row">
-            <Text fontSize="2xl">{player.name}</Text>
+            <Text fontSize="sm">{player.name}</Text>
             <RadioGroup.Root
+              // size="sm"
               value={player.team.toString()}
               // 変更があったときの処理
               onValueChange={({ value }) => {

@@ -30,6 +30,10 @@ const Home = () => {
       showToast("名前を入力してください");
       return;
     }
+    if (name.length > 20) {
+      showToast("名前が長すぎます！");
+      return;
+    }
     navigate(`lobby?name=${name}`);
   };
 
