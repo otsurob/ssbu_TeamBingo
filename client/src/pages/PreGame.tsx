@@ -149,7 +149,7 @@ const PreGame = () => {
   }
 
   return (
-    <Container pt={20} centerContent minH="100vh">
+    <Container pt={20} centerContent maxW="350px">
       <Card.Root>
         <CardBody gap="5">
           <Text textStyle="xl" fontWeight="bold">

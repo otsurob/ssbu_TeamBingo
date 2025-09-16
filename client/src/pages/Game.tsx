@@ -75,7 +75,9 @@ export default function Game() {
     //     });
     //   navigate("/");
     // }
-    window.confirm("このボタンに意味はないよ！ｗ");
+    if (!window.confirm("部屋から退出します。よろしいですか？")) return;
+    // deleteOnePlayer
+    navigate(`/lobby?name=${name}`);
   };
 
   return (
