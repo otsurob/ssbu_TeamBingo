@@ -16,7 +16,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_URL } from "../constants/constants";
 import type { ResponseRoom } from "../types";
 import { toaster } from "../components/ui/toaster";
-import { isRoomExisting } from "../services/existing";
+import { isPlayerExisting, isRoomExisting } from "../services/existing";
 
 const Lobby = () => {
   const navigate = useNavigate();
@@ -46,6 +46,11 @@ const Lobby = () => {
       // placement: "top",
     });
   };
+
+  if (!name) {
+    navigate("/");
+    return;
+  }
 
   const makeRoom = async () => {
     if (!newRoom || !newPassword) {
@@ -83,6 +88,11 @@ const Lobby = () => {
     );
     console.log(isValidPasswordRes, password, room);
     if (isValidPasswordRes.data) {
+      //同じ名前のチェック
+      if (await isPlayerExisting(room, name)) {
+        showToast("同じ名前のプレイヤーが部屋に存在します！");
+        return;
+      }
       //joinplayer
       await axios.post(`${API_URL}/joinPlayer?room=${room}`, {
         name: name,
@@ -190,6 +200,14 @@ const Lobby = () => {
                     </Dialog.Positioner>
                   </Portal>
                 </Dialog.Root>
+                <Button
+                  colorPalette="cyan"
+                  onClick={() =>
+                    navigate(`/preGame?name=${name}&room=${room.room_name}`)
+                  }
+                >
+                  観戦
+                </Button>
                 <Button size="2xs">削除</Button>
               </CardFooter>
             </Card.Root>
