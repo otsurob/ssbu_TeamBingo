@@ -57,7 +57,9 @@ export default function Game() {
     const bingosRes = await axios.get<ResponseBingo[]>(
       `${API_URL}/bingos?room=${room}`
     );
-    if (bingosRes.data.length !== 0) {
+    // console.log(bingosRes);
+    //空のオブジェクトの配列が返る(要素2つ)
+    if (bingosRes.data[0].cell_reses) {
       axios.delete(`${API_URL}/bingos/${room}`);
     }
     navigate(`/preGame?name=${name}&room=${room}`);
@@ -77,7 +79,7 @@ export default function Game() {
     //   navigate("/");
     // }
     if (!window.confirm("部屋から退出します。よろしいですか？")) return;
-    if (await isPlayerExisting) {
+    if (await isPlayerExisting(room, name)) {
       await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
     }
     navigate(`/lobby?name=${name}`);
