@@ -27,6 +27,7 @@ import {
 import { toaster } from "../components/ui/toaster";
 
 const PreGame = () => {
+  const TEAM: string[] = ["A", "B"]; //応急処置
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
   const [players, setPlayers] = useState<ResponsePlayer[]>([]);
   const [player, setPlayer] = useState<ResponsePlayer>();
@@ -56,6 +57,12 @@ const PreGame = () => {
   if (!room || !name) {
     navigate("/");
     return <></>;
+  }
+
+  //応急処置
+  if (!player) {
+    <>Loading...</>;
+    return;
   }
 
   const showToast = (title: string) => {
@@ -97,7 +104,8 @@ const PreGame = () => {
 
   const leaveRoom = async () => {
     if (!window.confirm("部屋を抜けますか？")) return;
-    if (await isPlayerExisting) {
+    if (await isPlayerExisting(room, name)) {
+      console.log("existing");
       await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
     }
     navigate(`/lobby?name=${name}`);
@@ -105,7 +113,7 @@ const PreGame = () => {
 
   const deleteRoom = async () => {
     if (!window.confirm("部屋を解散しますか？")) return;
-    if (await isRoomExisting) {
+    if (await isRoomExisting(room)) {
       await axios.delete(`${API_URL}/deleteRoom/${room}`);
     }
     navigate(`/lobby?name=${name}`);
@@ -138,6 +146,20 @@ const PreGame = () => {
     window.location.reload();
   };
 
+  const handleDeletePlayer = async (targetName: string) => {
+    if (!window.confirm("このプレイヤーを削除しますか？")) return;
+    await axios.delete(
+      `${API_URL}/leaveOnePlayer?room=${room}&name=${targetName}`
+    );
+    // 自分自身を削除した場合はロビーへ遷移
+    if (targetName === name) {
+      navigate(`/lobby?name=${name}`);
+      return;
+    }
+    // それ以外は一覧を即時更新
+    setPlayers((prev) => prev.filter((p) => p.name !== targetName));
+  };
+
   if (bingos.length === 0) {
     return <Spinner size="lg" />;
   }
@@ -154,7 +176,7 @@ const PreGame = () => {
               <Text>あなたはゲームに参加していません</Text>
             ) : (
               <>
-                <Text>あなたはチーム {player?.team} です</Text>
+                <Text>あなたはチーム {TEAM[player?.team]} です</Text>
               </>
             )}
             <Button onClick={() => navigate(`/game?name=${name}&room=${room}`)}>
@@ -162,9 +184,9 @@ const PreGame = () => {
             </Button>
             <Text textStyle="md">チームを指定して参加</Text>
             <Flex flexWrap="wrap" flexDirection="row">
-              <Button onClick={() => handleChangeTeam(0)}>チーム：0</Button>
+              <Button onClick={() => handleChangeTeam(0)}>チーム：A</Button>
               <Spacer />
-              <Button onClick={() => handleChangeTeam(1)}>チーム：1</Button>
+              <Button onClick={() => handleChangeTeam(1)}>チーム：B</Button>
             </Flex>
           </CardBody>
         </Card.Root>
@@ -228,6 +250,7 @@ const PreGame = () => {
             players={players}
             name={name}
             onChangeTeam={handleChangeTeam}
+            onDeletePlayer={handleDeletePlayer}
           />
         </CardBody>
         <CardFooter display="flex" justifyContent="space-between" gap={2}>
