@@ -22,10 +22,11 @@ type IRoomUsecase interface {
 
 type roomUsecase struct {
 	rr repository.IRoomRepository
+	tx repository.Transaction
 }
 
-func NewRoomUsecase(rr repository.IRoomRepository) IRoomUsecase {
-	return &roomUsecase{rr}
+func NewRoomUsecase(rr repository.IRoomRepository, tx repository.Transaction) IRoomUsecase {
+	return &roomUsecase{rr, tx}
 }
 
 func (ru *roomUsecase) GetAllRooms() ([]domain.RoomResponse, error) {
@@ -154,25 +155,37 @@ func (ru *roomUsecase) UpdatePlayerTeam(player domain.Player, name string, roomN
 
 func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerResponse, error) {
 	//部屋のプレイヤー一覧を取得
-	players := []domain.Player{}
-	if err := ru.rr.GetPlayers(&players, roomName); err != nil {
-		return []domain.PlayerResponse{}, err
-	}
+	// players := []domain.Player{}
+	// if err := ru.rr.GetPlayers(&players, roomName); err != nil {
+	// 	return []domain.PlayerResponse{}, err
+	// }
 	playerReses := []domain.PlayerResponse{}
-	newPlayers := domain.RandomTeamSepalator(players)
-	for i, v := range newPlayers {
-		v.Team = domain.Team(i % 2)
-		// TODO:トランザクションないとやばめ
-		if err := ru.rr.UpdatePlayerTeam(&v, roomName, v.Name); err != nil {
-			return []domain.PlayerResponse{}, err
+
+	err := ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
+		players := []domain.Player{}
+		if err := rr.GetPlayers(&players, roomName); err != nil {
+			return err
 		}
-		playerRes := domain.PlayerResponse{
-			ID:       v.ID,
-			Name:     v.Name,
-			RoomName: v.RoomName,
-			Team:     v.Team,
+
+		newPlayers := domain.RandomTeamSepalator(players)
+		for i, v := range newPlayers {
+			v.Team = domain.Team(i % 2)
+			// TODO:トランザクションないとやばめ
+			if err := rr.UpdatePlayerTeam(&v, roomName, v.Name); err != nil {
+				return err
+			}
+			playerRes := domain.PlayerResponse{
+				ID:       v.ID,
+				Name:     v.Name,
+				RoomName: v.RoomName,
+				Team:     v.Team,
+			}
+			playerReses = append(playerReses, playerRes)
 		}
-		playerReses = append(playerReses, playerRes)
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 	return playerReses, nil
 }
