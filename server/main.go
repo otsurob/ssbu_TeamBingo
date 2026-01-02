@@ -6,6 +6,7 @@ import (
 	"server/repository"
 	"server/router"
 	"server/usecase"
+	"server/websocket"
 	// "server/validator"
 )
 
@@ -17,10 +18,15 @@ func main() {
 	bingoRepository := repository.NewBingoRepository(db)
 	tx := repository.NewGormTransaction(db)
 	roomUsecase := usecase.NewRoomUsecase(roomRepository, tx)
-	bingoUsecase := usecase.NewBingoUsecase(bingoRepository, roomRepository, tx)
+	hub := websocket.NewHub()
+	go hub.Run()
+	pusher := websocket.NewPusher(hub)
+	eventPublisher := usecase.NewEventPublisher(pusher)
+	bingoUsecase := usecase.NewBingoUsecase(bingoRepository, roomRepository, tx, eventPublisher)
 	roomController := controller.NewRoomController(roomUsecase)
 	bingoController := controller.NewBingoController(bingoUsecase)
-	e := router.NewRouter(bingoController, roomController)
+	websocketController := controller.NewWebsocketController(hub)
+	e := router.NewRouter(bingoController, roomController, websocketController)
 	//echoのStart関数でサーバーを立ち上げる　今回はポート番号8080　エラーが起きたらlogに表示して強制終了
 	e.Logger.Fatal(e.Start(":8080"))
 }
