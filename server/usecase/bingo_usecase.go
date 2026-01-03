@@ -18,13 +18,14 @@ type bingoUsecase struct {
 	br repository.IBingoRepository
 	rr repository.IRoomRepository
 	tx repository.Transaction
+	ep IEventPublisher
 }
 
 // 依存性を注入するためのコンストラクタ
 // bingoUsecase の構造体の実体を作成
 // roomrepositoryの機能も必要なのでインターフェース依存
-func NewBingoUsecase(br repository.IBingoRepository, rr repository.IRoomRepository, tx repository.Transaction) IBingoUsecase {
-	return &bingoUsecase{br, rr, tx}
+func NewBingoUsecase(br repository.IBingoRepository, rr repository.IRoomRepository, tx repository.Transaction, ep IEventPublisher) IBingoUsecase {
+	return &bingoUsecase{br: br, rr: rr, tx: tx, ep: ep}
 }
 
 func (bu *bingoUsecase) GetTwoBingos(roomName string) ([]domain.BingoResponse, error) {
@@ -130,11 +131,19 @@ func (bu *bingoUsecase) CreateBingos(bingo domain.Bingo) ([]domain.BingoResponse
 	if err != nil {
 		return nil, err
 	}
+
+	if bu.ep != nil {
+		if err := bu.ep.PushGameStarted(bingo.RoomName); err != nil {
+			return nil, err
+		}
+	}
 	return resBingos, nil
 }
 
 func (bu *bingoUsecase) UpdateCell(cell domain.Cell, roomName string, team domain.Team, row uint, col uint) (domain.CellResponse, error) {
 	resCell := domain.CellResponse{}
+	// Pusherに渡す用の変数
+	var updatedCell domain.Cell
 
 	err := bu.tx.DoBingo(func(br repository.IBingoRepository, _ repository.IRoomRepository) error {
 		bingo := domain.Bingo{}
@@ -142,9 +151,14 @@ func (bu *bingoUsecase) UpdateCell(cell domain.Cell, roomName string, team domai
 		if err := br.GetBingo(&bingo, roomName, team); err != nil {
 			return err
 		}
+		// ここの値の更新はUpdateCellに絡まない。後続のPusherのためのupdatedCellにそのまま渡せるように確実な情報として更新しておく
+		cell.BingoId = bingo.ID
+		cell.Row = row
+		cell.Col = col
 		if err := br.UpdateCell(&cell, bingo.ID, row, col); err != nil {
 			return err
 		}
+		updatedCell = cell
 		resCell = domain.CellResponse{
 			ID:      cell.ID,
 			BingoId: cell.BingoId,
@@ -157,12 +171,24 @@ func (bu *bingoUsecase) UpdateCell(cell domain.Cell, roomName string, team domai
 	if err != nil {
 		return domain.CellResponse{}, err
 	}
+
+	if bu.ep != nil {
+		if err := bu.ep.PushCellUpdated(roomName, updatedCell); err != nil {
+			return domain.CellResponse{}, err
+		}
+	}
+
 	return resCell, nil
 }
 
 func (bu *bingoUsecase) DeleteBingos(roomName string) error {
 	if err := bu.br.DeleteBingos(roomName); err != nil {
 		return err
+	}
+	if bu.ep != nil {
+		if err := bu.ep.PushGameEnded(roomName); err != nil {
+			return err
+		}
 	}
 	return nil
 }

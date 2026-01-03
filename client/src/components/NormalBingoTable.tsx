@@ -9,7 +9,16 @@ type NormalBingoProps = {
   team2Players: ResponsePlayer[];
   deleteGame: () => void;
   exitGame: () => void;
-  room: string;
+  teamNumber1: number;
+  teamNumber2: number;
+  onCellUpdate: (
+    row: number,
+    col: number,
+    nextStatus: number,
+    cellId: number,
+    bingoId: number,
+    teamNumber: number
+  ) => void;
 };
 
 export const NormalBingoTable = ({
@@ -19,17 +28,19 @@ export const NormalBingoTable = ({
   team2Players,
   deleteGame,
   exitGame,
-  room,
+  teamNumber1,
+  teamNumber2,
+  onCellUpdate,
 }: NormalBingoProps) => {
   return (
     <Flex flexWrap="wrap" flexDirection="row" marginTop={30}>
       <Flex flexWrap="wrap" flexDirection="column">
         <BingoTable
           bingoProps={team1Bingo}
-          room={room}
           bingoTableSize="500px"
           bingoCellSize="100px"
-          teamNumber={0}
+          teamNumber={teamNumber1}
+          onCellUpdate={onCellUpdate}
         />
         <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
           {team1Players?.map((player) => (
@@ -46,10 +57,10 @@ export const NormalBingoTable = ({
       <Flex flexWrap="wrap" flexDirection="column">
         <BingoTable
           bingoProps={team2Bingo}
-          room={room}
           bingoTableSize="500px"
           bingoCellSize="100px"
-          teamNumber={1}
+          teamNumber={teamNumber2}
+          onCellUpdate={onCellUpdate}
         />
         <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
           {team2Players?.map((player) => (

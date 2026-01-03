@@ -23,10 +23,11 @@ type IRoomUsecase interface {
 type roomUsecase struct {
 	rr repository.IRoomRepository
 	tx repository.Transaction
+	ep IEventPublisher
 }
 
-func NewRoomUsecase(rr repository.IRoomRepository, tx repository.Transaction) IRoomUsecase {
-	return &roomUsecase{rr, tx}
+func NewRoomUsecase(rr repository.IRoomRepository, tx repository.Transaction, ep IEventPublisher) IRoomUsecase {
+	return &roomUsecase{rr, tx, ep}
 }
 
 func (ru *roomUsecase) GetAllRooms() ([]domain.RoomResponse, error) {
@@ -137,19 +138,47 @@ func (ru *roomUsecase) CreatePlayer(player domain.Player, roomName string) (doma
 		RoomName: player.RoomName,
 		Team:     player.Team,
 	}
+
+	if ru.ep != nil {
+		if err := ru.ep.PushPlayerJoined(roomName, player); err != nil {
+			return domain.PlayerResponse{}, err
+		}
+	}
+
 	return resPlayer, nil
 }
 
 func (ru *roomUsecase) UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error) {
-	if err := ru.rr.UpdatePlayerTeam(&player, roomName, name); err != nil {
+	var updatedPlayer domain.Player
+
+	err := ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
+		// まず更新
+		if err := rr.UpdatePlayerTeam(&player, roomName, name); err != nil {
+			return err
+		}
+		// 更新後の正しい値を取得してイベント用に使う
+		if err := rr.GetPlayer(&updatedPlayer, roomName, name); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return domain.PlayerResponse{}, err
 	}
+
 	playerRes := domain.PlayerResponse{
-		ID:       player.ID,
-		Name:     player.Name,
-		RoomName: player.RoomName,
-		Team:     player.Team,
+		ID:       updatedPlayer.ID,
+		Name:     updatedPlayer.Name,
+		RoomName: updatedPlayer.RoomName,
+		Team:     updatedPlayer.Team,
 	}
+
+	if ru.ep != nil {
+		if err := ru.ep.PushPlayerTeamUpdated(roomName, updatedPlayer); err != nil {
+			return domain.PlayerResponse{}, err
+		}
+	}
+
 	return playerRes, nil
 }
 
@@ -160,6 +189,7 @@ func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerRespons
 	// 	return []domain.PlayerResponse{}, err
 	// }
 	playerReses := []domain.PlayerResponse{}
+	updates := []domain.PlayerTeamUpdate{}
 
 	err := ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
 		players := []domain.Player{}
@@ -170,7 +200,6 @@ func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerRespons
 		newPlayers := domain.RandomTeamSepalator(players)
 		for i, v := range newPlayers {
 			v.Team = domain.Team(i % 2)
-			// TODO:トランザクションないとやばめ
 			if err := rr.UpdatePlayerTeam(&v, roomName, v.Name); err != nil {
 				return err
 			}
@@ -181,12 +210,25 @@ func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerRespons
 				Team:     v.Team,
 			}
 			playerReses = append(playerReses, playerRes)
+			updates = append(updates, domain.PlayerTeamUpdate{
+				ID:       v.ID,
+				Name:     v.Name,
+				RoomName: v.RoomName,
+				NewTeam:  v.Team,
+			})
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	if ru.ep != nil {
+		if err := ru.ep.PushTeamsShuffled(roomName, updates); err != nil {
+			return nil, err
+		}
+	}
+
 	return playerReses, nil
 }
 

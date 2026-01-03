@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ResponseBingo, ResponsePlayer } from "../types";
 import axios from "axios";
-import { API_URL } from "../constants/constants";
+import { API_URL, WS_URL } from "../constants/constants";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
@@ -30,28 +30,74 @@ const PreGame = () => {
   const TEAM: string[] = ["A", "B"]; //応急処置
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
   const [players, setPlayers] = useState<ResponsePlayer[]>([]);
-  const [player, setPlayer] = useState<ResponsePlayer>();
   //名前変更用変数
   const [newName, setNewName] = useState<string>("");
-  useEffect(() => {
-    const fetchData = async () => {
-      const [bingosRes, playersRes, playerRes] = await Promise.all([
-        axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`),
-        axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`),
-        axios.get<ResponsePlayer>(
-          `${API_URL}/player?name=${name}&room=${room}`
-        ),
-      ]);
-      setBingos(bingosRes.data);
-      setPlayers(playersRes.data);
-      setPlayer(playerRes.data);
-    };
-    fetchData();
-  }, []);
+
   const [searchParams] = useSearchParams();
   const name = searchParams.get("name");
   const room = searchParams.get("room");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [bingosRes, playersRes] = await Promise.all([
+        axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`),
+        axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`),
+      ]);
+      setBingos(bingosRes.data);
+      setPlayers(playersRes.data);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (!room) return;
+    const ws = new WebSocket(`${WS_URL}/ws?room=${room}`);
+
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data) as { type: string; data: any };
+        if (msg.type === "player_team_updated") {
+          const data = msg.data as {
+            id: number;
+            name: string;
+            room_name: string;
+            new_team: number;
+          };
+          setPlayers((prev) =>
+            prev.map((p) =>
+              p.id === data.id
+                ? {
+                    ...p,
+                    team: data.new_team,
+                  }
+                : p
+            )
+          );
+        } else if (msg.type === "teams_shuffled") {
+          const data = msg.data as {
+            players: { id: number; new_team: number }[];
+          };
+          setPlayers((prev) =>
+            prev.map((p) => {
+              const found = data.players.find((upd) => upd.id === p.id);
+              return found ? { ...p, team: found.new_team } : p;
+            })
+          );
+        }
+      } catch (e) {
+        console.error("ws message parse error", e);
+      }
+    };
+    ws.onerror = () => {
+      console.error("ws connection error");
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [room]);
+
   // console.log("bingos!", bingos);
 
   if (!room || !name) {
@@ -59,11 +105,7 @@ const PreGame = () => {
     return <></>;
   }
 
-  //応急処置
-  if (!player) {
-    <>Loading...</>;
-    return;
-  }
+  const me = players.find((p) => p.name === name);
 
   const showToast = (title: string) => {
     toaster.create({
@@ -113,15 +155,16 @@ const PreGame = () => {
 
   const deleteRoom = async () => {
     if (!window.confirm("部屋を解散しますか？")) return;
-    if (await isRoomExisting(room)) {
-      await axios.delete(`${API_URL}/deleteRoom/${room}`);
+    if (room) {
+      if (await isRoomExisting(room)) {
+        await axios.delete(`${API_URL}/deleteRoom/${room}`);
+      }
     }
     navigate(`/lobby?name=${name}`);
   };
 
   // name, room はクエリパラメータから取得する。バグったら修正
   const handleChangeTeam = async (team: number) => {
-    // TODO:リロードしないとチームの変更は反映されない
     if (!window.confirm("チームを変更しますか？")) return;
     await axios.put(`${API_URL}/updatePlayerTeam?name=${name}&room=${room}`, {
       team: team,
@@ -133,7 +176,8 @@ const PreGame = () => {
       showToast("名前が長すぎます！");
       return;
     }
-    if (await isPlayerExisting) {
+    // 現在の自分を削除して新しい名前で参加し直す
+    if (name) {
       await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
     }
     await axios.post(`${API_URL}/joinPlayer?room=${room}`, {
@@ -172,11 +216,11 @@ const PreGame = () => {
             <Text textStyle="xl" fontWeight="bold">
               ゲームが開始されています！
             </Text>
-            {player?.team === 2 ? (
+            {me?.team === 2 ? (
               <Text>あなたはゲームに参加していません</Text>
             ) : (
               <>
-                <Text>あなたはチーム {TEAM[player?.team]} です</Text>
+                <Text>あなたはチーム {TEAM[me?.team ?? 0]} です</Text>
               </>
             )}
             <Button onClick={() => navigate(`/game?name=${name}&room=${room}`)}>

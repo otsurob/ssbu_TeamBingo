@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func NewRouter(bc controller.IBingoController, rc controller.IRoomController) *echo.Echo {
+func NewRouter(bc controller.IBingoController, rc controller.IRoomController, wc controller.IWebsocketController) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		//アクセスを許可するフロントエンドのドメインを追加
@@ -38,5 +38,7 @@ func NewRouter(bc controller.IBingoController, rc controller.IRoomController) *e
 	e.PUT("/dividePlayers", rc.DividePlayerTeam)
 	e.DELETE("/leavePlayer/:room", rc.DeletePlayer)
 	e.DELETE("/leaveOnePlayer", rc.DeleteOnePlayer)
+
+	e.GET("/ws", wc.Connect)
 	return e
 }

@@ -13,7 +13,7 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_URL } from "../constants/constants";
+import { API_URL, WS_URL } from "../constants/constants";
 import type { ResponseRoom } from "../types";
 import { toaster } from "../components/ui/toaster";
 import { isPlayerExisting, isRoomExisting } from "../services/existing";
@@ -51,6 +51,22 @@ const Lobby = () => {
     navigate("/");
     return;
   }
+
+  const connectWebSocket = async (roomName: string) => {
+    return new Promise<void>((resolve, reject) => {
+      try {
+        const ws = new WebSocket(`${WS_URL}/ws?room=${roomName}`);
+        ws.onopen = () => {
+          console.log("websocket is opening");
+          ws.close();
+          resolve();
+        };
+        ws.onerror = () => reject(new Error("WebSocket connection failed"));
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
 
   const makeRoom = async () => {
     if (!newRoom || !newPassword) {
@@ -99,6 +115,12 @@ const Lobby = () => {
         team: 2,
         room_name: room,
       });
+      try {
+        await connectWebSocket(room);
+      } catch (e) {
+        showToast("WebSocket 接続に失敗しました");
+        return;
+      }
       navigate(`/preGame?name=${name}&room=${room}`);
     } else {
       showToast("パスワードが間違っています");
