@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ResponseBingo, ResponsePlayer } from "../types";
 import axios from "axios";
-import { API_URL } from "../constants/constants";
+import { API_URL, WS_URL } from "../constants/constants";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
@@ -30,9 +30,16 @@ const PreGame = () => {
   const TEAM: string[] = ["A", "B"]; //応急処置
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
   const [players, setPlayers] = useState<ResponsePlayer[]>([]);
+  // 自分の情報
   const [player, setPlayer] = useState<ResponsePlayer>();
   //名前変更用変数
   const [newName, setNewName] = useState<string>("");
+
+  const [searchParams] = useSearchParams();
+  const name = searchParams.get("name");
+  const room = searchParams.get("room");
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchData = async () => {
       const [bingosRes, playersRes, playerRes] = await Promise.all([
@@ -48,10 +55,45 @@ const PreGame = () => {
     };
     fetchData();
   }, []);
-  const [searchParams] = useSearchParams();
-  const name = searchParams.get("name");
-  const room = searchParams.get("room");
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!room) return;
+    const ws = new WebSocket(`${WS_URL}/ws?room=${room}`);
+
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data) as { type: string; data: any };
+        if (msg.type === "player_team_updated") {
+          const data = msg.data as {
+            id: number;
+            name: string;
+            room_name: string;
+            new_team: number;
+          };
+          setPlayers((prev) =>
+            prev.map((p) =>
+              p.id === data.id
+                ? {
+                    ...p,
+                    team: data.new_team,
+                  }
+                : p
+            )
+          );
+        }
+      } catch (e) {
+        console.error("ws message parse error", e);
+      }
+    };
+    ws.onerror = () => {
+      console.error("ws connection error");
+    };
+
+    // return () => {
+    //   ws.close();
+    // };
+  }, [room]);
+
   // console.log("bingos!", bingos);
 
   if (!room || !name) {

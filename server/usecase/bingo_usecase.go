@@ -131,6 +131,12 @@ func (bu *bingoUsecase) CreateBingos(bingo domain.Bingo) ([]domain.BingoResponse
 	if err != nil {
 		return nil, err
 	}
+
+	if bu.ep != nil {
+		if err := bu.ep.PushGameStarted(bingo.RoomName); err != nil {
+			return nil, err
+		}
+	}
 	return resBingos, nil
 }
 
@@ -178,6 +184,11 @@ func (bu *bingoUsecase) UpdateCell(cell domain.Cell, roomName string, team domai
 func (bu *bingoUsecase) DeleteBingos(roomName string) error {
 	if err := bu.br.DeleteBingos(roomName); err != nil {
 		return err
+	}
+	if bu.ep != nil {
+		if err := bu.ep.PushGameEnded(roomName); err != nil {
+			return err
+		}
 	}
 	return nil
 }

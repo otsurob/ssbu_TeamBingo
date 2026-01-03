@@ -14,9 +14,12 @@ type PushEvent struct {
 type EventType string
 
 const (
-	EventCellUpdated EventType = "cell_updated"
-	// EventPlayerJoined  EventType = "player_joined"
-	// EventPlayerUpdated EventType = "player_updated"
+	EventCellUpdated   EventType = "cell_updated"
+	EventPlayerJoined  EventType = "player_joined"
+	EventPlayerUpdated EventType = "player_team_updated"
+	EventTeamsShuffled EventType = "teams_shuffled"
+	EventGameStarted   EventType = "game_started"
+	EventGameEnded     EventType = "game_ended"
 )
 
 // 実際にフロントへブロードキャストするデータの構造
@@ -31,4 +34,22 @@ type CellUpdate struct {
 	Col       uint   `json:"col"`
 	NewStatus Status `json:"new_status"`
 	BingoId   uint   `json:"bingo_id"`
+}
+
+type PlayerTeamUpdate struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	RoomName string `json:"room_name"`
+	NewTeam  Team   `json:"new_team"`
+}
+
+type TeamsShuffled struct {
+	Players []PlayerTeamUpdate `json:"players"`
+}
+
+type PlayerJoined struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	RoomName string `json:"room_name"`
+	Team     Team   `json:"team"`
 }
