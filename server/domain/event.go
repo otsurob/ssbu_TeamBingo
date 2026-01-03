@@ -15,11 +15,12 @@ type EventType string
 
 const (
 	EventCellUpdated   EventType = "cell_updated"
-	EventPlayerJoined  EventType = "player_joined"
 	EventPlayerUpdated EventType = "player_team_updated"
 	EventTeamsShuffled EventType = "teams_shuffled"
-	EventGameStarted   EventType = "game_started"
-	EventGameEnded     EventType = "game_ended"
+	//フロント未実装
+	EventPlayerJoined EventType = "player_joined"
+	EventGameStarted  EventType = "game_started"
+	EventGameEnded    EventType = "game_ended"
 )
 
 // 実際にフロントへブロードキャストするデータの構造

@@ -68,9 +68,9 @@ export default function Game() {
       console.error("ws connection error");
     };
 
-    // return () => {
-    //   ws.close();
-    // };
+    return () => {
+      ws.close();
+    };
   }, [room]);
 
   const isWide = useMedia({ minWidth: "1000px" });
