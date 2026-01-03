@@ -4,6 +4,7 @@ go 1.22.3
 
 require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
+	github.com/gorilla/websocket v1.5.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
 	gorm.io/driver/postgres v1.5.9

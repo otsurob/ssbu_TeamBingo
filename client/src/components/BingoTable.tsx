@@ -1,44 +1,45 @@
 import { Flex, IconButton, Image } from "@chakra-ui/react";
-import axios from "axios";
-import { useState } from "react";
-import { API_URL, NON_GOT_CELL } from "../constants/constants";
+import { NON_GOT_CELL } from "../constants/constants";
 import type { ResponseBingo } from "../types";
 
 type BingoTableProps = {
   bingoProps: ResponseBingo;
-  room: string;
   bingoTableSize: string;
   bingoCellSize: string;
   teamNumber: number;
+  onCellUpdate: (
+    row: number,
+    col: number,
+    nextStatus: number,
+    cellId: number,
+    bingoId: number,
+    teamNumber: number
+  ) => void;
 };
 
 export const BingoTable = ({
   bingoProps,
-  room,
   bingoTableSize,
   bingoCellSize,
   teamNumber,
+  onCellUpdate,
 }: BingoTableProps) => {
-  const [bingos, setBingos] = useState<ResponseBingo>(bingoProps);
   const changeBingoStatus = (row: number, col: number) => {
     if (!window.confirm("状態を更新しますか？")) return;
 
     const idx = row * 5 + col;
     // 指定のセル
-    const currentCell = bingos.cell_reses[idx];
+    const currentCell = bingoProps.cell_reses[idx];
     if (!currentCell) return;
     const nextStatus = currentCell.status ^ 1;
 
-    setBingos((prev) => {
-      const nextCells = prev.cell_reses.map((cell, i) =>
-        i === idx ? { ...cell, status: cell.status ^ 1 } : cell
-      );
-      return { ...prev, cell_reses: nextCells };
-    });
-    console.log(room, teamNumber, row, col, nextStatus);
-    axios.put(
-      `${API_URL}/updateCell?room=${room}&team=${teamNumber}&row=${row}&col=${col}`,
-      { status: nextStatus }
+    onCellUpdate(
+      row,
+      col,
+      nextStatus,
+      currentCell.id,
+      currentCell.bingo_id,
+      teamNumber
     );
   };
 
@@ -51,7 +52,7 @@ export const BingoTable = ({
       flexDirection="row"
       marginLeft={30}
     >
-      {bingos.cell_reses?.map((cell) => (
+      {bingoProps.cell_reses?.map((cell) => (
         <div key={cell.id}>
           {/* {bingo.team === teamNumber && ( */}
           <IconButton

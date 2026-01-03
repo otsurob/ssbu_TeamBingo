@@ -9,7 +9,16 @@ type SmallBingoProps = {
   team2Players: ResponsePlayer[];
   deleteGame: () => void;
   exitGame: () => void;
-  room: string;
+  teamNumber1: number;
+  teamNumber2: number;
+  onCellUpdate: (
+    row: number,
+    col: number,
+    nextStatus: number,
+    cellId: number,
+    bingoId: number,
+    teamNumber: number
+  ) => void;
 };
 
 export const SmallBingoTable = ({
@@ -19,7 +28,9 @@ export const SmallBingoTable = ({
   team2Players,
   deleteGame,
   exitGame,
-  room,
+  teamNumber1,
+  teamNumber2,
+  onCellUpdate,
 }: SmallBingoProps) => {
   return (
     <Flex flexWrap="wrap" flexDirection="column" marginTop={30}>
@@ -32,10 +43,10 @@ export const SmallBingoTable = ({
       </Flex>
       <BingoTable
         bingoProps={team1Bingo}
-        room={room}
         bingoTableSize="350px"
         bingoCellSize="70px"
-        teamNumber={0}
+        teamNumber={teamNumber1}
+        onCellUpdate={onCellUpdate}
       />
       <Spacer />
       <Button onClick={deleteGame}>終了</Button>
@@ -50,10 +61,10 @@ export const SmallBingoTable = ({
       </Flex>
       <BingoTable
         bingoProps={team2Bingo}
-        room={room}
         bingoTableSize="350px"
         bingoCellSize="70px"
-        teamNumber={1}
+        teamNumber={teamNumber2}
+        onCellUpdate={onCellUpdate}
       />
     </Flex>
   );
