@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -19,13 +20,25 @@ var defaultUpgrader = gws.Upgrader{
 		if origin == "" {
 			return true
 		}
+
 		allowed := []string{
 			"http://localhost:3000",
 			"http://localhost:5173",
+			"http://127.0.0.1:3000",
+			"http://127.0.0.1:5173",
 			os.Getenv("FE_URL"),
 		}
+
 		for _, a := range allowed {
-			if a != "" && strings.EqualFold(origin, a) {
+			if a == "" {
+				continue
+			}
+			if strings.EqualFold(origin, a) {
+				return true
+			}
+			au, err1 := url.Parse(a)
+			ou, err2 := url.Parse(origin)
+			if err1 == nil && err2 == nil && strings.EqualFold(au.Host, ou.Host) {
 				return true
 			}
 		}

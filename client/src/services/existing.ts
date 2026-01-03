@@ -11,6 +11,7 @@ export const isRoomExisting = async(roomName: string) => {
 export const isPlayerExisting = async(roomName: string, name: string) => {
     const playerRes = await axios.get<ResponsePlayer>(`${API_URL}/player?name=${name}&room=${roomName}`)
     // nameが空文字なら存在しない
+    console.log(playerRes.data.name)
     return playerRes.data.name !== ""
 }
 
