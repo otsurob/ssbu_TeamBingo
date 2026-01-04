@@ -25,6 +25,7 @@ import {
   isRoomExisting,
 } from "../services/existing";
 import { toaster } from "../components/ui/toaster";
+import TeamArea from "../components/TeamArea";
 
 const PreGame = () => {
   const TEAM: string[] = ["A", "B"]; //応急処置
@@ -106,6 +107,13 @@ const PreGame = () => {
   }
 
   const me = players.find((p) => p.name === name);
+  // チームごとの名前一覧だけの変数を用意
+  const teamAPlayerNames = players
+    .filter((p) => p.team === 0)
+    .map((p) => p.name);
+  const teamBPlayerNames = players
+    .filter((p) => p.team === 1)
+    .map((p) => p.name);
 
   const showToast = (title: string) => {
     toaster.create({
@@ -304,6 +312,8 @@ const PreGame = () => {
           </Button>
         </CardFooter>
       </Card.Root>
+      <TeamArea teamNum={0} players={teamAPlayerNames} />
+      <TeamArea teamNum={1} players={teamBPlayerNames} />
     </Container>
   );
 };
