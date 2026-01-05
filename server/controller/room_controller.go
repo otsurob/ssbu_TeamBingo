@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 	"server/domain"
 	"server/usecase"
@@ -17,7 +18,7 @@ type IRoomController interface {
 	GetPlayer(c echo.Context) error
 	GetPlayers(c echo.Context) error
 	CreatePlayer(c echo.Context) error
-	UpdatePlayerTeam(c echo.Context) error
+	UpdatePlayer(c echo.Context) error
 	DividePlayerTeam(c echo.Context) error
 	DeletePlayer(c echo.Context) error
 	DeleteOnePlayer(c echo.Context) error
@@ -55,6 +56,9 @@ func (rc *roomController) CreateRoom(c echo.Context) error {
 	}
 	roomRes, err := rc.ru.CreateRoom(room)
 	if err != nil {
+		if errors.Is(err, usecase.ErrRoomAlreadyExists) {
+			return c.JSON(http.StatusConflict, err.Error())
+		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, roomRes)
@@ -110,23 +114,28 @@ func (rc *roomController) CreatePlayer(c echo.Context) error {
 	}
 	playerRes, err := rc.ru.CreatePlayer(player, roomName)
 	if err != nil {
+		if errors.Is(err, usecase.ErrPlayerAlreadyExists) {
+			return c.JSON(http.StatusConflict, err.Error())
+		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, playerRes)
 }
 
-func (rc *roomController) UpdatePlayerTeam(c echo.Context) error {
+func (rc *roomController) UpdatePlayer(c echo.Context) error {
 	roomName := c.QueryParam("room")
 	name := c.QueryParam("name")
 	player := domain.Player{}
+	//リクエストボディの内容をplayerに詰める。{"team":0}ならこれだけがplayerに入り、nameは空
 	if err := c.Bind(&player); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	playerRes, err := rc.ru.UpdatePlayerTeam(player, name, roomName)
+	playerRes, err := rc.ru.UpdatePlayer(player, name, roomName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+	// TODO: 空文字の名前更新を防ぐバリデーションなどは別途検討
 	return c.JSON(http.StatusOK, playerRes)
 }
 
