@@ -1,8 +1,14 @@
 package usecase
 
 import (
+	"errors"
 	"server/domain"
 	"server/repository"
+)
+
+var (
+	ErrRoomAlreadyExists   = errors.New("room already exists")
+	ErrPlayerAlreadyExists = errors.New("player already exists in the room")
 )
 
 type IRoomUsecase interface {
@@ -60,6 +66,15 @@ func (ru *roomUsecase) GetRoom(roomName string) (domain.RoomResponse, error) {
 }
 
 func (ru *roomUsecase) CreateRoom(room domain.Room) (domain.RoomResponse, error) {
+
+	// 重複チェック（room_name はユニーク想定）
+	existing := domain.Room{}
+	if err := ru.rr.GetRoom(&existing, room.RoomName); err != nil {
+		return domain.RoomResponse{}, err
+	}
+	if existing.ID != 0 {
+		return domain.RoomResponse{}, ErrRoomAlreadyExists
+	}
 
 	if err := ru.rr.CreateRoom(&room); err != nil {
 		return domain.RoomResponse{}, err
@@ -129,6 +144,16 @@ func (ru *roomUsecase) CreatePlayer(player domain.Player, roomName string) (doma
 		return domain.PlayerResponse{}, err
 	}
 	player.RoomId = room.ID
+
+	// 同一ルーム内での名前重複チェック
+	existing := domain.Player{}
+	if err := ru.rr.GetPlayer(&existing, roomName, player.Name); err != nil {
+		return domain.PlayerResponse{}, err
+	}
+	if existing.ID != 0 {
+		return domain.PlayerResponse{}, ErrPlayerAlreadyExists
+	}
+
 	if err := ru.rr.CreatePlayer(&player); err != nil {
 		return domain.PlayerResponse{}, err
 	}

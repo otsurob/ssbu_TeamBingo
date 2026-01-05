@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 	"server/domain"
 	"server/usecase"
@@ -55,6 +56,9 @@ func (rc *roomController) CreateRoom(c echo.Context) error {
 	}
 	roomRes, err := rc.ru.CreateRoom(room)
 	if err != nil {
+		if errors.Is(err, usecase.ErrRoomAlreadyExists) {
+			return c.JSON(http.StatusConflict, err.Error())
+		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, roomRes)
@@ -110,6 +114,9 @@ func (rc *roomController) CreatePlayer(c echo.Context) error {
 	}
 	playerRes, err := rc.ru.CreatePlayer(player, roomName)
 	if err != nil {
+		if errors.Is(err, usecase.ErrPlayerAlreadyExists) {
+			return c.JSON(http.StatusConflict, err.Error())
+		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
