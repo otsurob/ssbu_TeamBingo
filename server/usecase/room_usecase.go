@@ -14,7 +14,7 @@ type IRoomUsecase interface {
 	GetPlayer(roomName string, name string) (domain.PlayerResponse, error)
 	GetPlayers(room string) ([]domain.PlayerResponse, error)
 	CreatePlayer(player domain.Player, roomName string) (domain.PlayerResponse, error)
-	UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error)
+	UpdatePlayer(player domain.Player, name string, roomName string) (domain.PlayerResponse, error)
 	DividePlayerTeam(roomName string) ([]domain.PlayerResponse, error)
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string) error
@@ -27,7 +27,7 @@ type roomUsecase struct {
 }
 
 func NewRoomUsecase(rr repository.IRoomRepository, tx repository.Transaction, ep IEventPublisher) IRoomUsecase {
-	return &roomUsecase{rr, tx, ep}
+	return &roomUsecase{rr: rr, tx: tx, ep: ep}
 }
 
 func (ru *roomUsecase) GetAllRooms() ([]domain.RoomResponse, error) {
@@ -148,12 +148,12 @@ func (ru *roomUsecase) CreatePlayer(player domain.Player, roomName string) (doma
 	return resPlayer, nil
 }
 
-func (ru *roomUsecase) UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error) {
+func (ru *roomUsecase) UpdatePlayer(player domain.Player, name string, roomName string) (domain.PlayerResponse, error) {
 	var updatedPlayer domain.Player
 
 	err := ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
 		// まず更新
-		if err := rr.UpdatePlayerTeam(&player, roomName, name); err != nil {
+		if err := rr.UpdatePlayer(&player, roomName, name); err != nil {
 			return err
 		}
 		// 更新後の正しい値を取得してイベント用に使う
@@ -200,7 +200,10 @@ func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerRespons
 		newPlayers := domain.RandomTeamSepalator(players)
 		for i, v := range newPlayers {
 			v.Team = domain.Team(i % 2)
-			if err := rr.UpdatePlayerTeam(&v, roomName, v.Name); err != nil {
+			// Divide はチームだけを更新したいので、Name は空にして team 更新を選択させる
+			updateTarget := v
+			updateTarget.Name = ""
+			if err := rr.UpdatePlayer(&updateTarget, roomName, v.Name); err != nil {
 				return err
 			}
 			playerRes := domain.PlayerResponse{
