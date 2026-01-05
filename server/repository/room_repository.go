@@ -110,9 +110,10 @@ func (rr *roomRepository) DeletePlayer(roomName string) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected < 1 {
-		return fmt.Errorf("object does not exist")
-	}
+	//存在しないレコード削除しようとしたらエラー。現在の仕様では使わないのでコメントアウト
+	// if result.RowsAffected < 1 {
+	// 	return fmt.Errorf("object does not exist")
+	// }
 	return nil
 }
 
@@ -121,8 +122,8 @@ func (rr *roomRepository) DeleteOnePlayer(roomName string, name string) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected < 1 {
-		return fmt.Errorf("object does not exist")
-	}
+	// if result.RowsAffected < 1 {
+	// 	return fmt.Errorf("object does not exist")
+	// }
 	return nil
 }
