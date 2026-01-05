@@ -16,7 +16,7 @@ type IRoomRepository interface {
 	GetPlayer(plauers *domain.Player, roomName string, name string) error
 	GetPlayers(players *[]domain.Player, roomName string) error
 	CreatePlayer(player *domain.Player) error
-	UpdatePlayerTeam(player *domain.Player, roomName string, name string) error
+	UpdatePlayer(player *domain.Player, roomName string, name string) error
 	DeletePlayer(roomName string) error
 	DeleteOnePlayer(roomName string, name string) error
 }
@@ -82,8 +82,20 @@ func (rr *roomRepository) CreatePlayer(player *domain.Player) error {
 	return nil
 }
 
-func (rr *roomRepository) UpdatePlayerTeam(player *domain.Player, roomName string, name string) error {
-	result := rr.db.Model(player).Clauses(clause.Returning{}).Where("room_name=? AND name=?", roomName, name).Update("team", player.Team)
+func (rr *roomRepository) UpdatePlayer(player *domain.Player, roomName string, name string) error {
+	//mapで非ゼロのフィールドを更新できる。gormの仕様
+	updates := map[string]interface{}{}
+
+	// フロントの呼び出しは「チーム更新」または「名前更新」のどちらかのみ。
+	// name が空でなければ名前変更として扱い、team の更新は行わない。
+	// name が空ならチーム更新として扱う（team=0 も有効値のため無条件でセット）。
+	if player.Name != "" {
+		updates["name"] = player.Name
+	} else {
+		updates["team"] = player.Team
+	}
+
+	result := rr.db.Model(&domain.Player{}).Clauses(clause.Returning{}).Where("room_name=? AND name=?", roomName, name).Updates(updates)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -98,9 +110,10 @@ func (rr *roomRepository) DeletePlayer(roomName string) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected < 1 {
-		return fmt.Errorf("object does not exist")
-	}
+	//存在しないレコード削除しようとしたらエラー。現在の仕様では使わないのでコメントアウト
+	// if result.RowsAffected < 1 {
+	// 	return fmt.Errorf("object does not exist")
+	// }
 	return nil
 }
 
@@ -109,8 +122,8 @@ func (rr *roomRepository) DeleteOnePlayer(roomName string, name string) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected < 1 {
-		return fmt.Errorf("object does not exist")
-	}
+	// if result.RowsAffected < 1 {
+	// 	return fmt.Errorf("object does not exist")
+	// }
 	return nil
 }
