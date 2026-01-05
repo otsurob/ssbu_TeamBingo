@@ -28,6 +28,13 @@ export const updatePlayerTeam = async (room: string, name: string, team: number)
   return res.data;
 };
 
+export const updatePlayerName = async (room: string, name: string, newName: string) => {
+  const res = await axios.put(`${API_URL}/updatePlayerTeam?name=${name}&room=${room}`, {
+    name: newName,
+  });
+  return res.data;
+};
+
 export const dividePlayers = async (room: string) => {
   const res = await axios.put(`${API_URL}/dividePlayers?room=${room}`);
   return res.data as ResponsePlayer[] | unknown;

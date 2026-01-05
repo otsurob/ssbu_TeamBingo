@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ResponseBingo, ResponsePlayer } from "../types";
-import axios from "axios";
-import { API_URL, WS_URL } from "../constants/constants";
+import { WS_URL } from "../constants/constants";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
@@ -26,6 +25,15 @@ import {
 } from "../services/existing";
 import { toaster } from "../components/ui/toaster";
 import TeamArea from "../components/TeamArea";
+import { fetchBingos, createBingo } from "../api/bingoAPIs";
+import {
+  dividePlayers,
+  fetchPlayers,
+  joinPlayer,
+  leavePlayer,
+  updatePlayerTeam,
+} from "../api/playerAPIs";
+import { deleteRoom as deleteRoomAPI } from "../api/roomAPIs";
 
 const PreGame = () => {
   const TEAM: string[] = ["A", "B"]; //応急処置
@@ -41,15 +49,16 @@ const PreGame = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!room) return;
       const [bingosRes, playersRes] = await Promise.all([
-        axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`),
-        axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`),
+        fetchBingos(room),
+        fetchPlayers(room),
       ]);
-      setBingos(bingosRes.data);
-      setPlayers(playersRes.data);
+      setBingos(bingosRes);
+      setPlayers(playersRes);
     };
     fetchData();
-  }, []);
+  }, [room]);
 
   useEffect(() => {
     if (!room) return;
@@ -115,6 +124,11 @@ const PreGame = () => {
     .filter((p) => p.team === 1)
     .map((p) => p.name);
 
+  //meがundefinedのエラー回避のための応急処置
+  if (!me) {
+    return;
+  }
+
   const showToast = (title: string) => {
     toaster.create({
       title: title,
@@ -130,33 +144,25 @@ const PreGame = () => {
       return;
     }
     //ビンゴ生成・チーム振り分け処理
-    // await axios
-    //   .get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`)
-    //   .then(async (res) => {
-    //     if (res.data.length !== 0) {
-    //       //ビンゴが生成されています！
-    //       window.location.reload();
-    //       return;
-    //     }
-    //   });
     if (await isBingoExisting(room)) {
       showToast("ゲームは開始されています！画面をリロードしてください！");
       return;
     }
-    await axios.post(`${API_URL}/createBingo`, { room_name: room });
+    await createBingo(room);
     navigate(`/game?name=${name}&room=${room}`);
   };
 
   const randomTeam = async () => {
     if (!window.confirm("チームをランダムに振り分けます")) return;
-    await axios.put(`${API_URL}/dividePlayers?room=${room}`);
+    if (!room) return;
+    await dividePlayers(room);
   };
 
   const leaveRoom = async () => {
     if (!window.confirm("部屋を抜けますか？")) return;
     if (await isPlayerExisting(room, name)) {
       console.log("existing");
-      await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+      await leavePlayer(room, name);
     }
     navigate(`/lobby?name=${name}`);
   };
@@ -165,7 +171,7 @@ const PreGame = () => {
     if (!window.confirm("部屋を解散しますか？")) return;
     if (room) {
       if (await isRoomExisting(room)) {
-        await axios.delete(`${API_URL}/deleteRoom/${room}`);
+        await deleteRoomAPI(room);
       }
     }
     navigate(`/lobby?name=${name}`);
@@ -174,9 +180,8 @@ const PreGame = () => {
   // name, room はクエリパラメータから取得する。バグったら修正
   const handleChangeTeam = async (team: number) => {
     if (!window.confirm("チームを変更しますか？")) return;
-    await axios.put(`${API_URL}/updatePlayerTeam?name=${name}&room=${room}`, {
-      team: team,
-    });
+    if (!room || !name) return;
+    await updatePlayerTeam(room, name, team);
   };
 
   const changeName = async () => {
@@ -185,14 +190,12 @@ const PreGame = () => {
       return;
     }
     // 現在の自分を削除して新しい名前で参加し直す
-    if (name) {
-      await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+    if (name && room) {
+      await leavePlayer(room, name);
     }
-    await axios.post(`${API_URL}/joinPlayer?room=${room}`, {
-      name: newName,
-      team: 2,
-      room_name: room,
-    });
+    if (room) {
+      await joinPlayer(room, newName, 2);
+    }
     navigate(`/preGame?name=${newName}&room=${room}`);
     //リロードするかなんかしたいよね
     window.location.reload();
@@ -200,9 +203,9 @@ const PreGame = () => {
 
   const handleDeletePlayer = async (targetName: string) => {
     if (!window.confirm("このプレイヤーを削除しますか？")) return;
-    await axios.delete(
-      `${API_URL}/leaveOnePlayer?room=${room}&name=${targetName}`
-    );
+    if (room) {
+      await leavePlayer(room, targetName);
+    }
     // 自分自身を削除した場合はロビーへ遷移
     if (targetName === name) {
       navigate(`/lobby?name=${name}`);
@@ -312,8 +315,8 @@ const PreGame = () => {
           </Button>
         </CardFooter>
       </Card.Root>
-      <TeamArea teamNum={0} players={teamAPlayerNames} />
-      <TeamArea teamNum={1} players={teamBPlayerNames} />
+      <TeamArea teamNum={0} playerNames={teamAPlayerNames} me={me} />
+      <TeamArea teamNum={1} playerNames={teamBPlayerNames} me={me} />
     </Container>
   );
 };

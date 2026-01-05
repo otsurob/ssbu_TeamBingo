@@ -10,13 +10,14 @@ import {
   CloseButton,
   Text,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_URL, WS_URL } from "../constants/constants";
+import { WS_URL } from "../constants/constants";
 import type { ResponseRoom } from "../types";
 import { toaster } from "../components/ui/toaster";
 import { isPlayerExisting, isRoomExisting } from "../services/existing";
+import { fetchRooms, fetchRoom, createRoom, checkRoomPassword } from "../api/roomAPIs";
+import { joinPlayer } from "../api/playerAPIs";
 
 const Lobby = () => {
   const navigate = useNavigate();
@@ -29,8 +30,8 @@ const Lobby = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const roomDatas = await axios.get<ResponseRoom[]>(`${API_URL}/rooms`);
-      setRooms(roomDatas.data);
+      const roomDatas = await fetchRooms();
+      setRooms(roomDatas);
     };
     fetchData();
   }, []);
@@ -73,24 +74,17 @@ const Lobby = () => {
       showToast("入力内容が不正です");
       return;
     }
-    const RoomRes = await axios.get<ResponseRoom>(
-      `${API_URL}/room?room=${newRoom}`
-    );
-    console.log(RoomRes.data);
+    const RoomRes = await fetchRoom(newRoom);
+    console.log(RoomRes);
     // 部屋名が存在しない場合は空文字列が返る
-    if (RoomRes.data.room_name !== "") {
+    if (RoomRes.room_name !== "") {
       showToast("同名の部屋が存在します");
       return;
     }
-    await axios.post(`${API_URL}/createRoom`, {
-      room_name: newRoom,
-      password: newPassword,
-    });
-    await axios.post(`${API_URL}/joinPlayer?room=${newRoom}`, {
-      name: name,
-      team: 2,
-      room_name: newRoom,
-    });
+    await createRoom(newRoom, newPassword);
+    if (name) {
+      await joinPlayer(newRoom, name, 2);
+    }
     navigate(`/preGame?name=${name}&room=${newRoom}`);
   };
 
@@ -99,22 +93,18 @@ const Lobby = () => {
       showToast("部屋が存在しません");
       return;
     }
-    const isValidPasswordRes = await axios.get<boolean>(
-      `${API_URL}/roomPassword?room=${room}&password=${password}`
-    );
+    const isValidPasswordRes = await checkRoomPassword(room, password);
     console.log(isValidPasswordRes, password, room);
-    if (isValidPasswordRes.data) {
+    if (isValidPasswordRes) {
       //同じ名前のチェック
       if (await isPlayerExisting(room, name)) {
         showToast("同じ名前のプレイヤーが部屋に存在します！");
         return;
       }
       //joinplayer
-      await axios.post(`${API_URL}/joinPlayer?room=${room}`, {
-        name: name,
-        team: 2,
-        room_name: room,
-      });
+      if (name) {
+        await joinPlayer(room, name, 2);
+      }
       try {
         await connectWebSocket(room);
       } catch (e) {

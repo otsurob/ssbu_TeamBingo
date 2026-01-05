@@ -14,8 +14,8 @@ export const fetchBingo = async (room: string) => {
 };
 
 export const createBingo = async (room: string) => {
-  const res = await axios.post(`${API_URL}/createBingo`, { room_name: room });
-  return res.data as ResponseBingo[] | unknown;
+  const res = await axios.post<ResponseBingo[]>(`${API_URL}/createBingo`, { room_name: room });
+  return res.data;
 };
 
 export const updateCell = async (

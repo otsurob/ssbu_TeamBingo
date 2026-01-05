@@ -1,13 +1,14 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMedia } from "use-media";
 import { SmallBingoTable } from "../components/SmallBingoTable";
 import { NormalBingoTable } from "../components/NormalBingoTable";
-import { API_URL, WS_URL } from "../constants/constants";
+import { WS_URL } from "../constants/constants";
 import { Button, Center } from "@chakra-ui/react";
 import type { ResponseBingo, ResponsePlayer } from "../types";
 import { isPlayerExisting } from "../services/existing";
+import { fetchBingos, deleteBingos, updateCell } from "../api/bingoAPIs";
+import { fetchPlayers, leavePlayer } from "../api/playerAPIs";
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -20,11 +21,11 @@ export default function Game() {
     if (!room) return;
     const fetchData = async () => {
       const [bingoRes, playerRes] = await Promise.all([
-        axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`),
-        axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`),
+        fetchBingos(room),
+        fetchPlayers(room),
       ]);
-      setBingos(bingoRes.data);
-      setPlayers(playerRes.data);
+      setBingos(bingoRes);
+      setPlayers(playerRes);
     };
 
     fetchData();
@@ -99,13 +100,10 @@ export default function Game() {
 
   const deleteGame = async () => {
     if (!window.confirm("ゲームを終了しますか？")) return;
-    const bingosRes = await axios.get<ResponseBingo[]>(
-      `${API_URL}/bingos?room=${room}`
-    );
-    // console.log(bingosRes);
+    const bingosRes = await fetchBingos(room);
     //空のオブジェクトの配列が返る(要素2つ)
-    if (bingosRes.data[0].cell_reses) {
-      axios.delete(`${API_URL}/bingos/${room}`);
+    if (bingosRes[0].cell_reses) {
+      await deleteBingos(room);
     }
     navigate(`/preGame?name=${name}&room=${room}`);
   };
@@ -125,7 +123,7 @@ export default function Game() {
     // }
     if (!window.confirm("部屋から退出します。よろしいですか？")) return;
     if (await isPlayerExisting(room, name)) {
-      await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+      await leavePlayer(room, name);
     }
     navigate(`/lobby?name=${name}`);
   };
@@ -155,10 +153,7 @@ export default function Game() {
       )
     );
     try {
-      await axios.put(
-        `${API_URL}/updateCell?room=${room}&team=${teamNumber}&row=${row}&col=${col}`,
-        { status: nextStatus }
-      );
+      await updateCell(room, teamNumber, row, col, nextStatus);
     } catch (e) {
       // 失敗したら元に戻すなどの処理を入れてもよい
       console.error("cell update failed", e);
