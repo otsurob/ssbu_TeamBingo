@@ -4,18 +4,27 @@ import { useMedia } from "use-media";
 import { SmallBingoTable } from "../components/SmallBingoTable";
 import { NormalBingoTable } from "../components/NormalBingoTable";
 import { WS_URL } from "../constants/constants";
-import { Button, Center } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import type { ResponseBingo, ResponsePlayer } from "../types";
 import { isPlayerExisting } from "../services/existing";
 import { fetchBingos, deleteBingos, updateCell } from "../api/bingoAPIs";
 import { fetchPlayers, leavePlayer } from "../api/playerAPIs";
+import { toaster } from "../components/ui/toaster";
+import GameEnded from "../components/GameEnded";
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
   const [players, setPlayers] = useState<ResponsePlayer[]>([]);
   const [searchParams] = useSearchParams();
+  const [locked, setLocked] = useState(false);
   const room = searchParams.get("room");
   const name = searchParams.get("name");
+
+  useEffect(() => {
+    return () => {
+      toaster.dismiss(); // 全トースト閉じる
+    };
+  }, []);
 
   useEffect(() => {
     if (!room) return;
@@ -59,6 +68,19 @@ export default function Game() {
                 : b
             )
           );
+        } else if (msg.type === "game_ended") {
+          // console.log("end game!");
+          setLocked(true);
+          toaster.create({
+            title: "ゲームが終了しました！",
+            description: "右のボタンで準備画面に戻ってください",
+            type: "success",
+            duration: Infinity,
+            action: {
+              label: "準備画面に戻る",
+              onClick: () => navigate(`/preGame?name=${name}&room=${room}`),
+            },
+          });
         }
       } catch (e) {
         console.error("ws message parse error", e);
@@ -162,11 +184,19 @@ export default function Game() {
 
   return (
     <div>
-      {bingos.length === 0 ? (
+      {locked && (
+        <Box
+          position="fixed"
+          inset={0}
+          bg="blackAlpha.600"
+          zIndex="skipNav" // 1600: modal/popover等より上、toast(1700)より下 :contentReference[oaicite:2]{index=2}
+          pointerEvents="auto" // 操作を吸い込む
+        />
+      )}
+      {!bingos[0].id ? (
         <>
-          <Center>
-            <Button onClick={exitGame}>退出</Button>
-          </Center>
+          {/* {console.log("no data!")} */}
+          <GameEnded name={name} room={room} />
         </>
       ) : (
         <>
