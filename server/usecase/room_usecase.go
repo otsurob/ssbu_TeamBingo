@@ -268,15 +268,15 @@ func (ru *roomUsecase) DeletePlayer(roomName string) error {
 }
 
 func (ru *roomUsecase) DeleteOnePlayer(roomName string, name string) error {
+	var leftPlayer domain.Player
+	if err := ru.rr.GetPlayer(&leftPlayer, roomName, name); err != nil {
+		return err
+	}
 	if err := ru.rr.DeleteOnePlayer(roomName, name); err != nil {
 		return err
 	}
 	if ru.ep != nil {
-		// 退出したプレイヤーの情報を取得してからイベント送信
-		var leftPlayer domain.Player
-		if err := ru.rr.GetPlayer(&leftPlayer, roomName, name); err == nil {
-			_ = ru.ep.PushPlayerLeft(roomName, leftPlayer)
-		}
+		_ = ru.ep.PushPlayerLeft(roomName, leftPlayer)
 	}
 	return nil
 }
