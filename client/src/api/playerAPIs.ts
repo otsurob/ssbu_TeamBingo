@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../constants/constants";
-import type { ResponsePlayer } from "../types";
+import type { ResponsePlayer } from "../types/restAPIResponse";
 
 export const fetchPlayers = async (room: string) => {
   const res = await axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`);

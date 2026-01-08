@@ -6,7 +6,7 @@ import {
   RadioGroup,
   Text,
 } from "@chakra-ui/react";
-import type { ResponsePlayer } from "../types";
+import type { ResponsePlayer } from "../types/restAPIResponse";
 
 type TeamSelectionProps = {
   players: ResponsePlayer[];

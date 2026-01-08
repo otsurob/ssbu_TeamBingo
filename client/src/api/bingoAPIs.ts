@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../constants/constants";
-import type { CellResponse, ResponseBingo } from "../types";
+import type { CellResponse, ResponseBingo } from "../types/restAPIResponse";
 
 export const fetchBingos = async (room: string) => {
   const res = await axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`);

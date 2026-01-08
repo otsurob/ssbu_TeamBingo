@@ -1,6 +1,6 @@
 import axios from "axios"
 import { API_URL } from "../constants/constants"
-import { type ResponseBingo, type ResponsePlayer, type ResponseRoom } from "../types"
+import { type ResponseBingo, type ResponsePlayer, type ResponseRoom } from "../types/restAPIResponse"
 
 export const isRoomExisting = async(roomName: string) => {
     const roomRes = await axios.get<ResponseRoom>(`${API_URL}/room?room=${roomName}`)

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import type { ResponsePlayer } from "../types";
+import type { ResponsePlayer } from "../types/restAPIResponse";
 import {
   Button,
   Card,

@@ -13,10 +13,15 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { WS_URL } from "../constants/constants";
-import type { ResponseRoom } from "../types";
+import type { ResponseRoom } from "../types/restAPIResponse";
 import { toaster } from "../components/ui/toaster";
 import { isPlayerExisting, isRoomExisting } from "../services/existing";
-import { fetchRooms, fetchRoom, createRoom, checkRoomPassword } from "../api/roomAPIs";
+import {
+  fetchRooms,
+  fetchRoom,
+  createRoom,
+  checkRoomPassword,
+} from "../api/roomAPIs";
 import { joinPlayer } from "../api/playerAPIs";
 
 const Lobby = () => {
@@ -109,6 +114,7 @@ const Lobby = () => {
         await connectWebSocket(room);
       } catch (e) {
         showToast("WebSocket 接続に失敗しました");
+        console.log(e);
         return;
       }
       navigate(`/preGame?name=${name}&room=${room}`);

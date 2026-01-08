@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ResponseBingo, ResponsePlayer } from "../types";
+import type { ResponseBingo, ResponsePlayer } from "../types/restAPIResponse";
 import { WS_URL } from "../constants/constants";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -35,6 +35,7 @@ import {
 import { deleteRoom as deleteRoomAPI } from "../api/roomAPIs";
 import GameStarted from "../components/GameStarted";
 import SpectatorArea from "../components/SpectatorArea";
+import type { wsEventType } from "../types/websocketEvent";
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -69,14 +70,9 @@ const PreGame = () => {
 
     ws.onmessage = (ev) => {
       try {
-        const msg = JSON.parse(ev.data) as { type: string; data: any };
+        const msg = JSON.parse(ev.data) as wsEventType;
         if (msg.type === "player_team_updated") {
-          const data = msg.data as {
-            id: number;
-            name: string;
-            room_name: string;
-            new_team: number;
-          };
+          const data = msg.data;
           setPlayers((prev) =>
             prev.map((p) =>
               p.id === data.id
@@ -88,9 +84,7 @@ const PreGame = () => {
             )
           );
         } else if (msg.type === "teams_shuffled") {
-          const data = msg.data as {
-            players: { id: number; new_team: number }[];
-          };
+          const data = msg.data;
           setPlayers((prev) =>
             prev.map((p) => {
               const found = data.players.find((upd) => upd.id === p.id);
@@ -115,22 +109,12 @@ const PreGame = () => {
           }, 3000);
         } else if (msg.type === "player_joined") {
           console.log("new player joined!");
-          const data = msg.data as {
-            id: number;
-            name: string;
-            room_name: string;
-            team: number;
-          };
+          const data = msg.data;
           // prevを使わないと古いplayersを参照してしまう！要確認
           setPlayers((prev) => [...prev, data]);
         } else if (msg.type === "player_exited") {
           console.log("player exited!");
-          const data = msg.data as {
-            id: number;
-            name: string;
-            room_name: string;
-            team: number;
-          };
+          const data = msg.data;
           // 退出したプレイヤーのidと一致するplayerをfilter
           setPlayers((prev) => prev.filter((p) => p.id !== data.id));
         }

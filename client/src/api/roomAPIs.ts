@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../constants/constants";
-import type { ResponseRoom } from "../types";
+import type { ResponseRoom } from "../types/restAPIResponse";
 
 export const fetchRooms = async () => {
   const res = await axios.get<ResponseRoom[]>(`${API_URL}/rooms`);

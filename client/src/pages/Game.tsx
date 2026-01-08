@@ -5,7 +5,7 @@ import { SmallBingoTable } from "../components/SmallBingoTable";
 import { NormalBingoTable } from "../components/NormalBingoTable";
 import { WS_URL } from "../constants/constants";
 import { Box } from "@chakra-ui/react";
-import type { ResponseBingo, ResponsePlayer } from "../types";
+import type { ResponseBingo, ResponsePlayer } from "../types/restAPIResponse";
 import { isPlayerExisting } from "../services/existing";
 import { fetchBingos, deleteBingos, updateCell } from "../api/bingoAPIs";
 import { fetchPlayers, leavePlayer } from "../api/playerAPIs";
