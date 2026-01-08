@@ -19,7 +19,7 @@ export type PlayerJoined = {
   team: number;
 }
 
-export type PlayerExited = {
+export type PlayerLeft = {
   id: number;
   name: string;
   room_name: string;
@@ -34,15 +34,19 @@ export type CellUpdated = {
   bingo_id: number;
 }
 
-export type GameStarted = {}
+export type GameStarted = {
+  room_name: string;
+}
 
-export type GameEnded = {}
+export type GameEnded = {
+  room_name: string;
+}
 
 export type wsEventType = 
   | { type: "player_team_updated"; data: PlayerTeamUpdated }
   | { type: "teams_shuffled"; data: TeamsShuffled }
   | { type: "player_joined"; data: PlayerJoined }
-  | { type: "player_exited"; data: PlayerExited }
+  | { type: "player_left"; data: PlayerLeft }
   | { type: "cell_updated"; data: CellUpdated }
   | { type: "game_started"; data: GameStarted }
   | { type: "game_ended"; data: GameEnded }

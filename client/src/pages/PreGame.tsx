@@ -112,11 +112,12 @@ const PreGame = () => {
           const data = msg.data;
           // prevを使わないと古いplayersを参照してしまう！要確認
           setPlayers((prev) => [...prev, data]);
-        } else if (msg.type === "player_exited") {
-          console.log("player exited!");
+        } else if (msg.type === "player_left") {
+          console.log("player left!");
           const data = msg.data;
+          console.log(data);
           // 退出したプレイヤーのidと一致するplayerをfilter
-          setPlayers((prev) => prev.filter((p) => p.id !== data.id));
+          setPlayers((prev) => prev.filter((p) => p.name !== data.name));
         }
       } catch (e) {
         console.error("ws message parse error", e);
