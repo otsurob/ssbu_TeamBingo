@@ -28,7 +28,7 @@ const SpectatorArea = ({ me, spectatorNames }: SpectatorAreaProps) => {
         textStyle="2xl"
         backgroundColor="green.500"
       >
-        観戦
+        未参加
       </Card.Header>
       <Separator />
       <Card.Body backgroundColor="green.200">

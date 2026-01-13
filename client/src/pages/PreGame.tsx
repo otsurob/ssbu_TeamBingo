@@ -36,6 +36,7 @@ import { deleteRoom as deleteRoomAPI } from "../api/roomAPIs";
 import GameStarted from "../components/GameStarted";
 import SpectatorArea from "../components/SpectatorArea";
 import type { wsEventType } from "../types/websocketEvent";
+import RoomSettings from "../components/RoomSettings";
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -313,6 +314,7 @@ const PreGame = () => {
                 </Dialog.Positioner>
               </Portal>
             </Dialog.Root>
+            <RoomSettings players={players} />
           </Card.Header>
           <CardBody gap="5">
             <Button onClick={startGame}>ゲーム開始</Button>

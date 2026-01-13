@@ -11,6 +11,7 @@ import { fetchBingos, deleteBingos, updateCell } from "../api/bingoAPIs";
 import { fetchPlayers, leavePlayer } from "../api/playerAPIs";
 import { toaster } from "../components/ui/toaster";
 import GameEnded from "../components/GameEnded";
+import type { wsEventType } from "../types/websocketEvent";
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -46,16 +47,10 @@ export default function Game() {
 
     ws.onmessage = (ev) => {
       try {
-        const msg = JSON.parse(ev.data) as { type: string; data: any };
+        const msg = JSON.parse(ev.data) as wsEventType;
         if (msg.type === "cell_updated") {
           // console.log("detect update!!!");
-          const data = msg.data as {
-            id: number;
-            row: number;
-            col: number;
-            new_status: number;
-            bingo_id: number;
-          };
+          const data = msg.data;
           setBingos((prev) =>
             prev.map((b) =>
               b.id === data.bingo_id
