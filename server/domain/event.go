@@ -19,6 +19,7 @@ const (
 	EventTeamsShuffled EventType = "teams_shuffled"
 	//フロント未実装
 	EventPlayerJoined EventType = "player_joined"
+	EventPlayerLeft   EventType = "player_left"
 	EventGameStarted  EventType = "game_started"
 	EventGameEnded    EventType = "game_ended"
 )
@@ -53,4 +54,21 @@ type PlayerJoined struct {
 	Name     string `json:"name"`
 	RoomName string `json:"room_name"`
 	Team     Team   `json:"team"`
+}
+
+type PlayerLeft struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	RoomName string `json:"room_name"`
+	Team     Team   `json:"team"`
+}
+
+type GameStarted struct {
+	// ID       uint   `json:"id"`
+	RoomName string `json:"room_name"`
+}
+
+type GameEnded struct {
+	// ID       uint   `json:"id"`
+	RoomName string `json:"room_name"`
 }

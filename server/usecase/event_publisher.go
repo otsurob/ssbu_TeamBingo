@@ -10,6 +10,7 @@ type IEventPublisher interface {
 	PushPlayerTeamUpdated(roomName string, player domain.Player) error
 	PushTeamsShuffled(roomName string, updates []domain.PlayerTeamUpdate) error
 	PushPlayerJoined(roomName string, player domain.Player) error
+	PushPlayerLeft(roomName string, player domain.Player) error
 	PushGameStarted(roomName string) error
 	PushGameEnded(roomName string) error
 }
@@ -86,12 +87,27 @@ func (ep *eventPublisher) PushPlayerJoined(roomName string, player domain.Player
 	})
 }
 
+func (ep *eventPublisher) PushPlayerLeft(roomName string, player domain.Player) error {
+	return ep.Push(&domain.PushEvent{
+		RoomName: roomName,
+		Event: &domain.Event{
+			Type: domain.EventPlayerLeft,
+			Data: domain.PlayerLeft{
+				ID:       player.ID,
+				Name:     player.Name,
+				RoomName: player.RoomName,
+				Team:     player.Team,
+			},
+		},
+	})
+}
+
 func (ep *eventPublisher) PushGameStarted(roomName string) error {
 	return ep.Push(&domain.PushEvent{
 		RoomName: roomName,
 		Event: &domain.Event{
 			Type: domain.EventGameStarted,
-			Data: map[string]string{"room_name": roomName},
+			Data: domain.GameStarted{RoomName: roomName},
 		},
 	})
 }
@@ -101,7 +117,7 @@ func (ep *eventPublisher) PushGameEnded(roomName string) error {
 		RoomName: roomName,
 		Event: &domain.Event{
 			Type: domain.EventGameEnded,
-			Data: map[string]string{"room_name": roomName},
+			Data: domain.GameEnded{RoomName: roomName},
 		},
 	})
 }

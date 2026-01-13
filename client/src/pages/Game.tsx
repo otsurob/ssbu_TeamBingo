@@ -1,30 +1,41 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMedia } from "use-media";
 import { SmallBingoTable } from "../components/SmallBingoTable";
 import { NormalBingoTable } from "../components/NormalBingoTable";
-import { API_URL, WS_URL } from "../constants/constants";
-import { Button, Center } from "@chakra-ui/react";
-import type { ResponseBingo, ResponsePlayer } from "../types";
+import { WS_URL } from "../constants/constants";
+import { Box } from "@chakra-ui/react";
+import type { ResponseBingo, ResponsePlayer } from "../types/restAPIResponse";
 import { isPlayerExisting } from "../services/existing";
+import { fetchBingos, deleteBingos, updateCell } from "../api/bingoAPIs";
+import { fetchPlayers, leavePlayer } from "../api/playerAPIs";
+import { toaster } from "../components/ui/toaster";
+import GameEnded from "../components/GameEnded";
+import type { wsEventType } from "../types/websocketEvent";
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
   const [players, setPlayers] = useState<ResponsePlayer[]>([]);
   const [searchParams] = useSearchParams();
+  const [locked, setLocked] = useState(false);
   const room = searchParams.get("room");
   const name = searchParams.get("name");
+
+  useEffect(() => {
+    return () => {
+      toaster.dismiss(); // 全トースト閉じる
+    };
+  }, []);
 
   useEffect(() => {
     if (!room) return;
     const fetchData = async () => {
       const [bingoRes, playerRes] = await Promise.all([
-        axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`),
-        axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`),
+        fetchBingos(room),
+        fetchPlayers(room),
       ]);
-      setBingos(bingoRes.data);
-      setPlayers(playerRes.data);
+      setBingos(bingoRes);
+      setPlayers(playerRes);
     };
 
     fetchData();
@@ -36,16 +47,10 @@ export default function Game() {
 
     ws.onmessage = (ev) => {
       try {
-        const msg = JSON.parse(ev.data) as { type: string; data: any };
+        const msg = JSON.parse(ev.data) as wsEventType;
         if (msg.type === "cell_updated") {
           // console.log("detect update!!!");
-          const data = msg.data as {
-            id: number;
-            row: number;
-            col: number;
-            new_status: number;
-            bingo_id: number;
-          };
+          const data = msg.data;
           setBingos((prev) =>
             prev.map((b) =>
               b.id === data.bingo_id
@@ -58,6 +63,19 @@ export default function Game() {
                 : b
             )
           );
+        } else if (msg.type === "game_ended") {
+          // console.log("end game!");
+          setLocked(true);
+          toaster.create({
+            title: "ゲームが終了しました！",
+            description: "右のボタンで準備画面に戻ってください",
+            type: "success",
+            duration: Infinity,
+            action: {
+              label: "準備画面に戻る",
+              onClick: () => navigate(`/preGame?name=${name}&room=${room}`),
+            },
+          });
         }
       } catch (e) {
         console.error("ws message parse error", e);
@@ -99,13 +117,10 @@ export default function Game() {
 
   const deleteGame = async () => {
     if (!window.confirm("ゲームを終了しますか？")) return;
-    const bingosRes = await axios.get<ResponseBingo[]>(
-      `${API_URL}/bingos?room=${room}`
-    );
-    // console.log(bingosRes);
+    const bingosRes = await fetchBingos(room);
     //空のオブジェクトの配列が返る(要素2つ)
-    if (bingosRes.data[0].cell_reses) {
-      axios.delete(`${API_URL}/bingos/${room}`);
+    if (bingosRes[0].cell_reses) {
+      await deleteBingos(room);
     }
     navigate(`/preGame?name=${name}&room=${room}`);
   };
@@ -125,7 +140,7 @@ export default function Game() {
     // }
     if (!window.confirm("部屋から退出します。よろしいですか？")) return;
     if (await isPlayerExisting(room, name)) {
-      await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+      await leavePlayer(room, name);
     }
     navigate(`/lobby?name=${name}`);
   };
@@ -155,10 +170,7 @@ export default function Game() {
       )
     );
     try {
-      await axios.put(
-        `${API_URL}/updateCell?room=${room}&team=${teamNumber}&row=${row}&col=${col}`,
-        { status: nextStatus }
-      );
+      await updateCell(room, teamNumber, row, col, nextStatus);
     } catch (e) {
       // 失敗したら元に戻すなどの処理を入れてもよい
       console.error("cell update failed", e);
@@ -167,11 +179,19 @@ export default function Game() {
 
   return (
     <div>
-      {bingos.length === 0 ? (
+      {locked && (
+        <Box
+          position="fixed"
+          inset={0}
+          bg="blackAlpha.600"
+          zIndex="skipNav" // 1600: modal/popover等より上、toast(1700)より下 :contentReference[oaicite:2]{index=2}
+          pointerEvents="auto" // 操作を吸い込む
+        />
+      )}
+      {!bingos[0].id ? (
         <>
-          <Center>
-            <Button onClick={exitGame}>退出</Button>
-          </Center>
+          {/* {console.log("no data!")} */}
+          <GameEnded name={name} room={room} />
         </>
       ) : (
         <>

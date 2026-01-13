@@ -133,6 +133,11 @@ func (bu *bingoUsecase) CreateBingos(bingo domain.Bingo) ([]domain.BingoResponse
 	}
 
 	if bu.ep != nil {
+		// // ここで返す resBingos には両チーム分が入っているので、ひとつ目を代表として ID を渡す
+		// id := uint(0)
+		// if len(resBingos) > 0 {
+		// 	id = resBingos[0].ID
+		// }
 		if err := bu.ep.PushGameStarted(bingo.RoomName); err != nil {
 			return nil, err
 		}

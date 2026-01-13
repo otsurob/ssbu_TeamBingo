@@ -9,11 +9,12 @@ import {
   Stack,
   Field,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toaster } from "../components/ui/toaster";
-import { API_URL } from "../constants/constants";
+import { fetchRoom, createRoom } from "../api/roomAPIs";
+import { joinPlayer } from "../api/playerAPIs";
+import { fetchBingo } from "../api/bingoAPIs";
 
 const EnterRoomModal = () => {
   const navigate = useNavigate();
@@ -37,14 +38,13 @@ const EnterRoomModal = () => {
       showToast("名前と部屋IDを入力してください");
       return;
     }
-    await axios.get(`${API_URL}/room?room=${room}`).then(async (res) => {
-      if (res.data.length !== 0) {
-        showToast("その名前の部屋はすでに存在します！");
-        isRoomExisted = true;
-      } else {
-        isRoomExisted = false;
-      }
-    });
+    const existingRoom = await fetchRoom(room);
+    if (existingRoom.room_name !== "") {
+      showToast("その名前の部屋はすでに存在します！");
+      isRoomExisted = true;
+    } else {
+      isRoomExisted = false;
+    }
     if (isRoomExisted) {
       return;
     }
@@ -58,9 +58,8 @@ const EnterRoomModal = () => {
       room_name: room,
       password: "test",
     };
-    await axios.post(`${API_URL}/createRoom`, roomInfo);
-
-    await axios.post(`${API_URL}/joinPlayer`, player);
+    await createRoom(roomInfo.room_name, roomInfo.password);
+    await joinPlayer(player.room, player.name, player.team);
     navigate(`game?room=${room}&name=${name}&team=${team}`);
   };
 
@@ -69,14 +68,13 @@ const EnterRoomModal = () => {
       showToast("名前と部屋IDを入力してください");
       return;
     }
-    await axios.get(`${API_URL}/bingo?room=${room}`).then(async (res) => {
-      if (res.data.length === 0) {
-        showToast("部屋が存在しません！");
-        isRoomExisted = false;
-      } else {
-        isRoomExisted = true;
-      }
-    });
+    const bingoRes = await fetchBingo(room);
+    if (bingoRes.length === 0) {
+      showToast("部屋が存在しません！");
+      isRoomExisted = false;
+    } else {
+      isRoomExisted = true;
+    }
     if (!isRoomExisted) {
       return;
     }
@@ -86,7 +84,7 @@ const EnterRoomModal = () => {
       team: Number(team),
     };
 
-    await axios.post(`${API_URL}/joinPlayer`, player);
+    await joinPlayer(player.room, player.name, player.team);
     navigate(`game?room=${room}&name=${name}&team=${team}`);
   };
 
