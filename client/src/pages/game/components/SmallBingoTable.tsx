@@ -1,5 +1,8 @@
 import { Button, Center, Flex, Spacer, Text } from "@chakra-ui/react";
-import type { ResponseBingo, ResponsePlayer } from "../types/restAPIResponse";
+import type {
+  ResponseBingo,
+  ResponsePlayer,
+} from "../../../types/restAPIResponse";
 import { BingoTable } from "./BingoTable";
 
 type SmallBingoProps = {

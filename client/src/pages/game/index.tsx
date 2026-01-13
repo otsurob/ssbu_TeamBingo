@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMedia } from "use-media";
-import { SmallBingoTable } from "../components/SmallBingoTable";
-import { NormalBingoTable } from "../components/NormalBingoTable";
-import { WS_URL } from "../constants/constants";
+import { SmallBingoTable } from "./components/SmallBingoTable";
+import { NormalBingoTable } from "./components/NormalBingoTable";
+import { WS_URL } from "../../constants/constants";
 import { Box } from "@chakra-ui/react";
-import type { ResponseBingo, ResponsePlayer } from "../types/restAPIResponse";
-import { isPlayerExisting } from "../services/existing";
-import { fetchBingos, deleteBingos, updateCell } from "../api/bingoAPIs";
-import { fetchPlayers, leavePlayer } from "../api/playerAPIs";
-import { toaster } from "../components/ui/toaster";
-import GameEnded from "../components/GameEnded";
-import type { wsEventType } from "../types/websocketEvent";
+import type {
+  ResponseBingo,
+  ResponsePlayer,
+} from "../../types/restAPIResponse";
+import { isPlayerExisting } from "../../services/existing";
+import { fetchBingos, deleteBingos, updateCell } from "../../api/bingoAPIs";
+import { fetchPlayers, leavePlayer } from "../../api/playerAPIs";
+import { toaster } from "../../components/ui/toaster";
+import GameEnded from "./components/GameEnded";
+import type { wsEventType } from "../../types/websocketEvent";
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);

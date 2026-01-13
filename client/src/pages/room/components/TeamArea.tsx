@@ -1,7 +1,7 @@
 import { Card, Separator } from "@chakra-ui/react";
-import NameBar from "./NameBar";
-import type { ResponsePlayer } from "../types/restAPIResponse";
-import { updatePlayerTeam } from "../api/playerAPIs";
+import NameBar from "../../../components/NameBar";
+import type { ResponsePlayer } from "../../../types/restAPIResponse";
+import { updatePlayerTeam } from "../../../api/playerAPIs";
 
 type TeamAreaProps = {
   teamNum: number;

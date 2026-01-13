@@ -1,6 +1,6 @@
 import { Flex, IconButton, Image } from "@chakra-ui/react";
-import { NON_GOT_CELL } from "../constants/constants";
-import type { ResponseBingo } from "../types/restAPIResponse";
+import { NON_GOT_CELL } from "../../../constants/constants";
+import type { ResponseBingo } from "../../../types/restAPIResponse";
 
 type BingoTableProps = {
   bingoProps: ResponseBingo;

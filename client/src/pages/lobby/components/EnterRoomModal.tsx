@@ -1,3 +1,5 @@
+//今は使われてないかも
+
 import {
   Container,
   Center,
@@ -11,10 +13,10 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toaster } from "../components/ui/toaster";
-import { fetchRoom, createRoom } from "../api/roomAPIs";
-import { joinPlayer } from "../api/playerAPIs";
-import { fetchBingo } from "../api/bingoAPIs";
+import { toaster } from "../../../components/ui/toaster";
+import { fetchRoom, createRoom } from "../../../api/roomAPIs";
+import { joinPlayer } from "../../../api/playerAPIs";
+import { fetchBingo } from "../../../api/bingoAPIs";
 
 const EnterRoomModal = () => {
   const navigate = useNavigate();

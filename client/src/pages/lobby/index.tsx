@@ -12,17 +12,17 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { WS_URL } from "../constants/constants";
-import type { ResponseRoom } from "../types/restAPIResponse";
-import { toaster } from "../components/ui/toaster";
-import { isPlayerExisting, isRoomExisting } from "../services/existing";
+import { WS_URL } from "../../constants/constants";
+import type { ResponseRoom } from "../../types/restAPIResponse";
+import { toaster } from "../../components/ui/toaster";
+import { isPlayerExisting, isRoomExisting } from "../../services/existing";
 import {
   fetchRooms,
   fetchRoom,
   createRoom,
   checkRoomPassword,
-} from "../api/roomAPIs";
-import { joinPlayer } from "../api/playerAPIs";
+} from "../../api/roomAPIs";
+import { joinPlayer } from "../../api/playerAPIs";
 
 const Lobby = () => {
   const navigate = useNavigate();

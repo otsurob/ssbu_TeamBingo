@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import type { ResponseBingo, ResponsePlayer } from "../types/restAPIResponse";
-import { WS_URL } from "../constants/constants";
+import type {
+  ResponseBingo,
+  ResponsePlayer,
+} from "../../types/restAPIResponse";
+import { WS_URL } from "../../constants/constants";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
@@ -16,27 +19,27 @@ import {
   Spinner,
   Text,
 } from "@chakra-ui/react";
-import TeamSelection from "../components/TeamSelection";
+import TeamSelection from "./components/TeamSelection";
 import {
   isBingoExisting,
   isPlayerExisting,
   isRoomExisting,
-} from "../services/existing";
-import { toaster } from "../components/ui/toaster";
-import TeamArea from "../components/TeamArea";
-import { fetchBingos, createBingo } from "../api/bingoAPIs";
+} from "../../services/existing";
+import { toaster } from "../../components/ui/toaster";
+import TeamArea from "./components/TeamArea";
+import { fetchBingos, createBingo } from "../../api/bingoAPIs";
 import {
   dividePlayers,
   fetchPlayers,
   joinPlayer,
   leavePlayer,
   updatePlayerTeam,
-} from "../api/playerAPIs";
-import { deleteRoom as deleteRoomAPI } from "../api/roomAPIs";
-import GameStarted from "../components/GameStarted";
-import SpectatorArea from "../components/SpectatorArea";
-import type { wsEventType } from "../types/websocketEvent";
-import RoomSettings from "../components/RoomSettings";
+} from "../../api/playerAPIs";
+import { deleteRoom as deleteRoomAPI } from "../../api/roomAPIs";
+import GameStarted from "./components/GameStarted";
+import SpectatorArea from "./components/SpectatorArea";
+import type { wsEventType } from "../../types/websocketEvent";
+import RoomSettings from "../../components/RoomSettings";
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);

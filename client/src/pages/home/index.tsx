@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toaster } from "../components/ui/toaster";
+import { toaster } from "../../components/ui/toaster";
 
 const Home = () => {
   const navigate = useNavigate();
