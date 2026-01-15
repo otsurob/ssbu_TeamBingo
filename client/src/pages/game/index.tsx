@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMedia } from 'use-media';
 import { SmallBingoTable } from './components/SmallBingoTable';
 import { NormalBingoTable } from './components/NormalBingoTable';
-import { WS_URL } from '../../constants/constants';
 import { Box } from '@chakra-ui/react';
 import type { ResponseBingo, ResponsePlayer } from '../../types/restAPIResponse';
 import { isPlayerExisting } from '../../services/existing';
@@ -12,6 +11,7 @@ import { fetchPlayers, leavePlayer } from '../../api/playerAPIs';
 import { toaster } from '../../components/ui/toaster';
 import GameEnded from './components/GameEnded';
 import type { wsEventType } from '../../types/websocketEvent';
+import { connectRoomWebSocket } from '../../hooks/websocket';
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -20,6 +20,7 @@ export default function Game() {
   const [locked, setLocked] = useState(false);
   const room = searchParams.get('room');
   const name = searchParams.get('name');
+  const navigate = useNavigate();
 
   useEffect(() => {
     return () => {
@@ -38,59 +39,51 @@ export default function Game() {
     fetchData();
   }, [room]);
 
+  const handleWsEvent = useCallback(
+    (msg: wsEventType) => {
+      if (msg.type === 'cell_updated') {
+        const data = msg.data;
+        setBingos((prev) =>
+          prev.map((b) =>
+            b.id === data.bingo_id
+              ? {
+                  ...b,
+                  cell_reses: b.cell_reses.map((c) =>
+                    c.id === data.id ? { ...c, status: data.new_status } : c,
+                  ),
+                }
+              : b,
+          ),
+        );
+      } else if (msg.type === 'game_ended') {
+        setLocked(true);
+        toaster.create({
+          title: 'ゲームが終了しました！',
+          description: '右のボタンで準備画面に戻ってください',
+          type: 'success',
+          duration: Infinity,
+          action: {
+            label: '準備画面に戻る',
+            onClick: () => navigate(`/preGame?name=${name}&room=${room}`),
+          },
+        });
+      }
+    },
+    [name, navigate, room],
+  );
+
   useEffect(() => {
     if (!room) return;
-    const ws = new WebSocket(`${WS_URL}/ws?room=${room}`);
-
-    ws.onmessage = (ev) => {
-      try {
-        const msg = JSON.parse(ev.data) as wsEventType;
-        if (msg.type === 'cell_updated') {
-          // console.log("detect update!!!");
-          const data = msg.data;
-          setBingos((prev) =>
-            prev.map((b) =>
-              b.id === data.bingo_id
-                ? {
-                    ...b,
-                    cell_reses: b.cell_reses.map((c) =>
-                      c.id === data.id ? { ...c, status: data.new_status } : c,
-                    ),
-                  }
-                : b,
-            ),
-          );
-        } else if (msg.type === 'game_ended') {
-          // console.log("end game!");
-          setLocked(true);
-          toaster.create({
-            title: 'ゲームが終了しました！',
-            description: '右のボタンで準備画面に戻ってください',
-            type: 'success',
-            duration: Infinity,
-            action: {
-              label: '準備画面に戻る',
-              onClick: () => navigate(`/preGame?name=${name}&room=${room}`),
-            },
-          });
-        }
-      } catch (e) {
-        console.error('ws message parse error', e);
-      }
-    };
-
-    ws.onerror = () => {
-      console.error('ws connection error');
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [room]);
+    const cleanup = connectRoomWebSocket(room, {
+      onEvent: handleWsEvent,
+      onError: () => {
+        console.error('ws connection error');
+      },
+    });
+    return cleanup;
+  }, [handleWsEvent, room]);
 
   const isWide = useMedia({ minWidth: '1000px' });
-
-  const navigate = useNavigate();
 
   if (!room || !name) {
     navigate('/');

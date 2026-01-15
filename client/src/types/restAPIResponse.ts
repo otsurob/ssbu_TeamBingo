@@ -5,7 +5,7 @@ export type CreateBingo = {
 
 export type CellResponse = {
   id: number;
-  row:    number;
+  row: number;
   col: number;
   status: number;
   character: number;

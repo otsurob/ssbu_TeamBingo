@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResponseBingo, ResponsePlayer } from '../../types/restAPIResponse';
-import { WS_URL } from '../../constants/constants';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -33,6 +32,7 @@ import GameStarted from './components/GameStarted';
 import SpectatorArea from './components/SpectatorArea';
 import type { wsEventType } from '../../types/websocketEvent';
 import RoomSettings from '../../components/RoomSettings';
+import { connectRoomWebSocket } from '../../hooks/websocket';
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -58,73 +58,64 @@ const PreGame = () => {
     fetchData();
   }, [room]);
 
+  const handleWsEvent = useCallback(
+    (msg: wsEventType) => {
+      if (msg.type === 'player_team_updated') {
+        const data = msg.data;
+        setPlayers((prev) =>
+          prev.map((p) =>
+            p.id === data.id
+              ? {
+                  ...p,
+                  team: data.new_team,
+                }
+              : p,
+          ),
+        );
+      } else if (msg.type === 'teams_shuffled') {
+        const data = msg.data;
+        setPlayers((prev) =>
+          prev.map((p) => {
+            const found = data.players.find((upd) => upd.id === p.id);
+            return found ? { ...p, team: found.new_team } : p;
+          }),
+        );
+      } else if (msg.type === 'game_started') {
+        if (startedRef.current) return; // 二重発火ガード
+        startedRef.current = true;
+        setLocked(true);
+        toaster.create({
+          title: 'ゲームが開始されました！',
+          description: '3秒後にゲーム画面へ移動します',
+          type: 'success',
+          duration: 3000,
+        });
+        timerRef.current = window.setTimeout(() => {
+          navigate(`/game?name=${name}&room=${room}`, {
+            replace: true,
+          });
+        }, 3000);
+      } else if (msg.type === 'player_joined') {
+        const data = msg.data;
+        setPlayers((prev) => [...prev, data]);
+      } else if (msg.type === 'player_left') {
+        const data = msg.data;
+        setPlayers((prev) => prev.filter((p) => p.name !== data.name));
+      }
+    },
+    [name, navigate, room],
+  );
+
   useEffect(() => {
     if (!room) return;
-    const ws = new WebSocket(`${WS_URL}/ws?room=${room}`);
-
-    ws.onmessage = (ev) => {
-      try {
-        const msg = JSON.parse(ev.data) as wsEventType;
-        if (msg.type === 'player_team_updated') {
-          const data = msg.data;
-          setPlayers((prev) =>
-            prev.map((p) =>
-              p.id === data.id
-                ? {
-                    ...p,
-                    team: data.new_team,
-                  }
-                : p,
-            ),
-          );
-        } else if (msg.type === 'teams_shuffled') {
-          const data = msg.data;
-          setPlayers((prev) =>
-            prev.map((p) => {
-              const found = data.players.find((upd) => upd.id === p.id);
-              return found ? { ...p, team: found.new_team } : p;
-            }),
-          );
-        } else if (msg.type === 'game_started') {
-          // console.log("game started!!!");
-          if (startedRef.current) return; // 二重発火ガード
-          startedRef.current = true;
-          setLocked(true);
-          toaster.create({
-            title: 'ゲームが開始されました！',
-            description: '3秒後にゲーム画面へ移動します',
-            type: 'success',
-            duration: 3000,
-          });
-          timerRef.current = window.setTimeout(() => {
-            navigate(`/game?name=${name}&room=${room}`, {
-              replace: true,
-            });
-          }, 3000);
-        } else if (msg.type === 'player_joined') {
-          console.log('new player joined!');
-          const data = msg.data;
-          // prevを使わないと古いplayersを参照してしまう！要確認
-          setPlayers((prev) => [...prev, data]);
-        } else if (msg.type === 'player_left') {
-          console.log('player left!');
-          const data = msg.data;
-          console.log(data);
-          // 退出したプレイヤーのidと一致するplayerをfilter
-          setPlayers((prev) => prev.filter((p) => p.name !== data.name));
-        }
-      } catch (e) {
-        console.error('ws message parse error', e);
-      }
-    };
-    ws.onerror = () => {
-      console.error('ws connection error');
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [room]);
+    const cleanup = connectRoomWebSocket(room, {
+      onEvent: handleWsEvent,
+      onError: () => {
+        console.error('ws connection error');
+      },
+    });
+    return cleanup;
+  }, [handleWsEvent, room]);
 
   // console.log("bingos!", bingos);
 

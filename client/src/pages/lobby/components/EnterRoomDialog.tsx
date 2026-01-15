@@ -5,8 +5,8 @@ import { isPlayerExisting, isRoomExisting } from '../../../services/existing';
 import { toaster } from '../../../components/ui/toaster';
 import { checkRoomPassword } from '../../../api/roomAPIs';
 import { joinPlayer } from '../../../api/playerAPIs';
-import { WS_URL } from '../../../constants/constants';
 import { useNavigate } from 'react-router-dom';
+import { testRoomWebSocketConnection } from '../../../hooks/websocket';
 
 type EnterRoomDialogProps = {
   name: string;
@@ -23,21 +23,6 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
       type: 'error',
       closable: true,
       // placement: "top",
-    });
-  };
-  const connectWebSocket = async (roomName: string) => {
-    return new Promise<void>((resolve, reject) => {
-      try {
-        const ws = new WebSocket(`${WS_URL}/ws?room=${roomName}`);
-        ws.onopen = () => {
-          console.log('websocket is opening');
-          ws.close();
-          resolve();
-        };
-        ws.onerror = () => reject(new Error('WebSocket connection failed'));
-      } catch (e) {
-        reject(e);
-      }
     });
   };
   const enterRoom = async () => {
@@ -58,7 +43,7 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
         await joinPlayer(enterRoomName, name, 2);
       }
       try {
-        await connectWebSocket(enterRoomName);
+        await testRoomWebSocketConnection(enterRoomName);
       } catch (e) {
         showToast('WebSocket 接続に失敗しました');
         console.log(e);
