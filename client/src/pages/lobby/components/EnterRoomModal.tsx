@@ -10,39 +10,39 @@ import {
   RadioGroup,
   Stack,
   Field,
-} from "@chakra-ui/react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toaster } from "../../../components/ui/toaster";
-import { fetchRoom, createRoom } from "../../../api/roomAPIs";
-import { joinPlayer } from "../../../api/playerAPIs";
-import { fetchBingo } from "../../../api/bingoAPIs";
+} from '@chakra-ui/react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toaster } from '../../../components/ui/toaster';
+import { fetchRoom, createRoom } from '../../../api/roomAPIs';
+import { joinPlayer } from '../../../api/playerAPIs';
+import { fetchBingo } from '../../../api/bingoAPIs';
 
 const EnterRoomModal = () => {
   const navigate = useNavigate();
-  const [team, setTeam] = useState<string | null>("0");
+  const [team, setTeam] = useState<string | null>('0');
   let isRoomExisted = false;
 
-  const [name, setName] = useState("");
-  const [room, setRoom] = useState("");
+  const [name, setName] = useState('');
+  const [room, setRoom] = useState('');
 
   const showToast = (title: string) => {
     toaster.create({
       title: title,
-      type: "error",
+      type: 'error',
       closable: true,
       // placement: "top",
     });
   };
 
   const makeRoom = async () => {
-    if (name == "" || room == "") {
-      showToast("名前と部屋IDを入力してください");
+    if (name == '' || room == '') {
+      showToast('名前と部屋IDを入力してください');
       return;
     }
     const existingRoom = await fetchRoom(room);
-    if (existingRoom.room_name !== "") {
-      showToast("その名前の部屋はすでに存在します！");
+    if (existingRoom.room_name !== '') {
+      showToast('その名前の部屋はすでに存在します！');
       isRoomExisted = true;
     } else {
       isRoomExisted = false;
@@ -58,7 +58,7 @@ const EnterRoomModal = () => {
     };
     const roomInfo = {
       room_name: room,
-      password: "test",
+      password: 'test',
     };
     await createRoom(roomInfo.room_name, roomInfo.password);
     await joinPlayer(player.room, player.name, player.team);
@@ -66,13 +66,13 @@ const EnterRoomModal = () => {
   };
 
   const enterRoom = async () => {
-    if (name == "" || room == "") {
-      showToast("名前と部屋IDを入力してください");
+    if (name == '' || room == '') {
+      showToast('名前と部屋IDを入力してください');
       return;
     }
     const bingoRes = await fetchBingo(room);
     if (bingoRes.length === 0) {
-      showToast("部屋が存在しません！");
+      showToast('部屋が存在しません！');
       isRoomExisted = false;
     } else {
       isRoomExisted = true;
@@ -91,9 +91,9 @@ const EnterRoomModal = () => {
   };
 
   const radioItems = [
-    { label: "Team 1", value: "1" },
-    { label: "Team 2", value: "2" },
-    { label: "観戦として参加", value: "3" },
+    { label: 'Team 1', value: '1' },
+    { label: 'Team 2', value: '2' },
+    { label: '観戦として参加', value: '3' },
   ];
   return (
     <Container pt={20} centerContent minH="100vh">
@@ -101,25 +101,13 @@ const EnterRoomModal = () => {
         <CardBody>
           <Field.Root>
             <Field.Label>名前</Field.Label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <Input type="text" value={name} onChange={(e) => setName(e.target.value)} />
           </Field.Root>
           <Field.Root mt={4}>
             <Field.Label>部屋ID</Field.Label>
-            <Input
-              type="text"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-            />
+            <Input type="text" value={room} onChange={(e) => setRoom(e.target.value)} />
           </Field.Root>
-          <RadioGroup.Root
-            marginTop={10}
-            value={team}
-            onValueChange={(e) => setTeam(e.value)}
-          >
+          <RadioGroup.Root marginTop={10} value={team} onValueChange={(e) => setTeam(e.value)}>
             <Stack direction="row">
               {radioItems.map((item) => (
                 <RadioGroup.Item key={item.value} value={item.value}>
@@ -131,20 +119,10 @@ const EnterRoomModal = () => {
             </Stack>
           </RadioGroup.Root>
           <Center mt={8}>
-            <Button
-              marginRight={70}
-              colorScheme="teal"
-              size="lg"
-              onClick={makeRoom}
-            >
+            <Button marginRight={70} colorScheme="teal" size="lg" onClick={makeRoom}>
               部屋を作る
             </Button>
-            <Button
-              marginLeft={70}
-              colorScheme="teal"
-              size="lg"
-              onClick={enterRoom}
-            >
+            <Button marginLeft={70} colorScheme="teal" size="lg" onClick={enterRoom}>
               部屋に入る
             </Button>
           </Center>

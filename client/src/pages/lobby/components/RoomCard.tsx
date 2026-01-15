@@ -1,7 +1,7 @@
-import { Button, Card, CardFooter, CardHeader } from "@chakra-ui/react";
-import type { ResponseRoom } from "../../../types/restAPIResponse";
-import EnterRoomDialog from "./EnterRoomDialog";
-import { useNavigate } from "react-router-dom";
+import { Button, Card, CardFooter, CardHeader } from '@chakra-ui/react';
+import type { ResponseRoom } from '../../../types/restAPIResponse';
+import EnterRoomDialog from './EnterRoomDialog';
+import { useNavigate } from 'react-router-dom';
 
 type RoomCardProps = {
   name: string;
@@ -18,9 +18,7 @@ const RoomCard = ({ name, room }: RoomCardProps) => {
         <EnterRoomDialog name={name} room={room} />
         <Button
           colorPalette="cyan"
-          onClick={() =>
-            navigate(`/preGame?name=${name}&room=${room.room_name}`)
-          }
+          onClick={() => navigate(`/preGame?name=${name}&room=${room.room_name}`)}
         >
           観戦
         </Button>

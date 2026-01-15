@@ -1,14 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import type { ResponsePlayer } from "../../../types/restAPIResponse";
-import {
-  Button,
-  Card,
-  CardBody,
-  Container,
-  Flex,
-  Spacer,
-  Text,
-} from "@chakra-ui/react";
+import { useNavigate } from 'react-router-dom';
+import type { ResponsePlayer } from '../../../types/restAPIResponse';
+import { Button, Card, CardBody, Container, Flex, Spacer, Text } from '@chakra-ui/react';
 
 type GameStartedProps = {
   room: string;
@@ -17,14 +9,9 @@ type GameStartedProps = {
   handleChangeTeam: (teamNumber: number) => void;
 };
 
-const GameStarted = ({
-  room,
-  name,
-  me,
-  handleChangeTeam,
-}: GameStartedProps) => {
+const GameStarted = ({ room, name, me, handleChangeTeam }: GameStartedProps) => {
   const navigate = useNavigate();
-  const TEAM: string[] = ["A", "B"]; //応急処置
+  const TEAM: string[] = ['A', 'B']; //応急処置
 
   return (
     <Container pt={20} centerContent w="350px">
@@ -40,9 +27,7 @@ const GameStarted = ({
               <Text>あなたはチーム {TEAM[me?.team ?? 0]} です</Text>
             </>
           )}
-          <Button onClick={() => navigate(`/game?name=${name}&room=${room}`)}>
-            ゲーム画面へ
-          </Button>
+          <Button onClick={() => navigate(`/game?name=${name}&room=${room}`)}>ゲーム画面へ</Button>
           <Text textStyle="md">チームを指定して参加</Text>
           <Flex flexWrap="wrap" flexDirection="row">
             <Button onClick={() => handleChangeTeam(0)}>チーム：A</Button>

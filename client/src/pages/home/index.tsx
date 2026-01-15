@@ -1,6 +1,6 @@
 // import Form from "./components/Form";
 
-import Form from "./components/form";
+import Form from './components/form';
 
 const Home = () => {
   // return <Form />;

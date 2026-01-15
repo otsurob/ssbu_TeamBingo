@@ -1,11 +1,11 @@
-import { Container } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import type { ResponseRoom } from "../../types/restAPIResponse";
-import { fetchRooms } from "../../api/roomAPIs";
-import MakeRoomDialog from "./components/MakeRoomDialog";
-import RoomCard from "./components/RoomCard";
-import Loading from "../../components/Loading";
+import { Container } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import type { ResponseRoom } from '../../types/restAPIResponse';
+import { fetchRooms } from '../../api/roomAPIs';
+import MakeRoomDialog from './components/MakeRoomDialog';
+import RoomCard from './components/RoomCard';
+import Loading from '../../components/Loading';
 
 const Lobby = () => {
   const navigate = useNavigate();
@@ -21,10 +21,10 @@ const Lobby = () => {
   }, []);
 
   const [searchParams] = useSearchParams();
-  const name = searchParams.get("name");
+  const name = searchParams.get('name');
 
   if (!name) {
-    navigate("/");
+    navigate('/');
     return;
   }
 

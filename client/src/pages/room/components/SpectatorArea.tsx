@@ -1,7 +1,7 @@
-import { Card, Separator } from "@chakra-ui/react";
-import type { ResponsePlayer } from "../../../types/restAPIResponse";
-import NameBar from "../../../components/NameBar";
-import { updatePlayerTeam } from "../../../api/playerAPIs";
+import { Card, Separator } from '@chakra-ui/react';
+import type { ResponsePlayer } from '../../../types/restAPIResponse';
+import NameBar from '../../../components/NameBar';
+import { updatePlayerTeam } from '../../../api/playerAPIs';
 
 type SpectatorAreaProps = {
   // room: string,
@@ -13,7 +13,7 @@ type SpectatorAreaProps = {
 const SpectatorArea = ({ me, spectatorNames }: SpectatorAreaProps) => {
   const changeTeam = async () => {
     if (me.team === 2) return;
-    if (!window.confirm("チームを変更しますか？")) return;
+    if (!window.confirm('チームを変更しますか？')) return;
     //呼ぶのにmeの値使っていいのかね
     await updatePlayerTeam(me.room_name, me.name, 2);
   };

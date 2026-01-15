@@ -1,7 +1,7 @@
-import { Card, Separator } from "@chakra-ui/react";
-import NameBar from "../../../components/NameBar";
-import type { ResponsePlayer } from "../../../types/restAPIResponse";
-import { updatePlayerTeam } from "../../../api/playerAPIs";
+import { Card, Separator } from '@chakra-ui/react';
+import NameBar from '../../../components/NameBar';
+import type { ResponsePlayer } from '../../../types/restAPIResponse';
+import { updatePlayerTeam } from '../../../api/playerAPIs';
 
 type TeamAreaProps = {
   teamNum: number;
@@ -10,14 +10,14 @@ type TeamAreaProps = {
 };
 
 const TeamArea = ({ teamNum, playerNames, me }: TeamAreaProps) => {
-  const team = teamNum === 0 ? "A" : "B";
-  const color = teamNum === 0 ? "red" : "blue";
-  const teamColor = color + ".500";
-  const playerColor = color + ".200";
+  const team = teamNum === 0 ? 'A' : 'B';
+  const color = teamNum === 0 ? 'red' : 'blue';
+  const teamColor = color + '.500';
+  const playerColor = color + '.200';
 
   const changeTeam = async () => {
     if (me.team === teamNum) return;
-    if (!window.confirm("チームを変更しますか？")) return;
+    if (!window.confirm('チームを変更しますか？')) return;
     //呼ぶのにmeの値使っていいのかね
     await updatePlayerTeam(me.room_name, me.name, teamNum);
   };

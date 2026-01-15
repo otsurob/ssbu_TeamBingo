@@ -1,6 +1,6 @@
-import { Flex, IconButton, Image } from "@chakra-ui/react";
-import { NON_GOT_CELL } from "../../../constants/constants";
-import type { ResponseBingo } from "../../../types/restAPIResponse";
+import { Flex, IconButton, Image } from '@chakra-ui/react';
+import { NON_GOT_CELL } from '../../../constants/constants';
+import type { ResponseBingo } from '../../../types/restAPIResponse';
 
 type BingoTableProps = {
   bingoProps: ResponseBingo;
@@ -13,7 +13,7 @@ type BingoTableProps = {
     nextStatus: number,
     cellId: number,
     bingoId: number,
-    teamNumber: number
+    teamNumber: number,
   ) => void;
 };
 
@@ -25,7 +25,7 @@ export const BingoTable = ({
   onCellUpdate,
 }: BingoTableProps) => {
   const changeBingoStatus = (row: number, col: number) => {
-    if (!window.confirm("状態を更新しますか？")) return;
+    if (!window.confirm('状態を更新しますか？')) return;
 
     const idx = row * 5 + col;
     // 指定のセル
@@ -33,32 +33,20 @@ export const BingoTable = ({
     if (!currentCell) return;
     const nextStatus = currentCell.status ^ 1;
 
-    onCellUpdate(
-      row,
-      col,
-      nextStatus,
-      currentCell.id,
-      currentCell.bingo_id,
-      teamNumber
-    );
+    onCellUpdate(row, col, nextStatus, currentCell.id, currentCell.bingo_id, teamNumber);
   };
 
   // console.log(bingos);
 
   return (
-    <Flex
-      flexWrap="wrap"
-      w={bingoTableSize}
-      flexDirection="row"
-      marginLeft={30}
-    >
+    <Flex flexWrap="wrap" w={bingoTableSize} flexDirection="row" marginLeft={30}>
       {bingoProps.cell_reses?.map((cell) => (
         <div key={cell.id}>
           {/* {bingo.team === teamNumber && ( */}
           <IconButton
             h={bingoCellSize}
             w={bingoCellSize}
-            backgroundColor={cell.status === NON_GOT_CELL ? "white" : "red"}
+            backgroundColor={cell.status === NON_GOT_CELL ? 'white' : 'red'}
             value={cell.status}
             onClick={() => changeBingoStatus(cell.row, cell.col)}
             // aria-label={bingo.character}

@@ -1,10 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import type {
-  ResponseBingo,
-  ResponsePlayer,
-} from "../../types/restAPIResponse";
-import { WS_URL } from "../../constants/constants";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from 'react';
+import type { ResponseBingo, ResponsePlayer } from '../../types/restAPIResponse';
+import { WS_URL } from '../../constants/constants';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -18,38 +15,34 @@ import {
   Portal,
   Spinner,
   Text,
-} from "@chakra-ui/react";
-import TeamSelection from "./components/TeamSelection";
-import {
-  isBingoExisting,
-  isPlayerExisting,
-  isRoomExisting,
-} from "../../services/existing";
-import { toaster } from "../../components/ui/toaster";
-import TeamArea from "./components/TeamArea";
-import { fetchBingos, createBingo } from "../../api/bingoAPIs";
+} from '@chakra-ui/react';
+import TeamSelection from './components/TeamSelection';
+import { isBingoExisting, isPlayerExisting, isRoomExisting } from '../../services/existing';
+import { toaster } from '../../components/ui/toaster';
+import TeamArea from './components/TeamArea';
+import { fetchBingos, createBingo } from '../../api/bingoAPIs';
 import {
   dividePlayers,
   fetchPlayers,
   joinPlayer,
   leavePlayer,
   updatePlayerTeam,
-} from "../../api/playerAPIs";
-import { deleteRoom as deleteRoomAPI } from "../../api/roomAPIs";
-import GameStarted from "./components/GameStarted";
-import SpectatorArea from "./components/SpectatorArea";
-import type { wsEventType } from "../../types/websocketEvent";
-import RoomSettings from "../../components/RoomSettings";
+} from '../../api/playerAPIs';
+import { deleteRoom as deleteRoomAPI } from '../../api/roomAPIs';
+import GameStarted from './components/GameStarted';
+import SpectatorArea from './components/SpectatorArea';
+import type { wsEventType } from '../../types/websocketEvent';
+import RoomSettings from '../../components/RoomSettings';
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
   const [players, setPlayers] = useState<ResponsePlayer[]>([]);
   //名前変更用変数
-  const [newName, setNewName] = useState<string>("");
+  const [newName, setNewName] = useState<string>('');
 
   const [searchParams] = useSearchParams();
-  const name = searchParams.get("name");
-  const room = searchParams.get("room");
+  const name = searchParams.get('name');
+  const room = searchParams.get('room');
   const navigate = useNavigate();
   const startedRef = useRef(false);
   const timerRef = useRef<number | null>(null);
@@ -58,10 +51,7 @@ const PreGame = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!room) return;
-      const [bingosRes, playersRes] = await Promise.all([
-        fetchBingos(room),
-        fetchPlayers(room),
-      ]);
+      const [bingosRes, playersRes] = await Promise.all([fetchBingos(room), fetchPlayers(room)]);
       setBingos(bingosRes);
       setPlayers(playersRes);
     };
@@ -75,7 +65,7 @@ const PreGame = () => {
     ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data) as wsEventType;
-        if (msg.type === "player_team_updated") {
+        if (msg.type === 'player_team_updated') {
           const data = msg.data;
           setPlayers((prev) =>
             prev.map((p) =>
@@ -84,26 +74,26 @@ const PreGame = () => {
                     ...p,
                     team: data.new_team,
                   }
-                : p
-            )
+                : p,
+            ),
           );
-        } else if (msg.type === "teams_shuffled") {
+        } else if (msg.type === 'teams_shuffled') {
           const data = msg.data;
           setPlayers((prev) =>
             prev.map((p) => {
               const found = data.players.find((upd) => upd.id === p.id);
               return found ? { ...p, team: found.new_team } : p;
-            })
+            }),
           );
-        } else if (msg.type === "game_started") {
+        } else if (msg.type === 'game_started') {
           // console.log("game started!!!");
           if (startedRef.current) return; // 二重発火ガード
           startedRef.current = true;
           setLocked(true);
           toaster.create({
-            title: "ゲームが開始されました！",
-            description: "3秒後にゲーム画面へ移動します",
-            type: "success",
+            title: 'ゲームが開始されました！',
+            description: '3秒後にゲーム画面へ移動します',
+            type: 'success',
             duration: 3000,
           });
           timerRef.current = window.setTimeout(() => {
@@ -111,24 +101,24 @@ const PreGame = () => {
               replace: true,
             });
           }, 3000);
-        } else if (msg.type === "player_joined") {
-          console.log("new player joined!");
+        } else if (msg.type === 'player_joined') {
+          console.log('new player joined!');
           const data = msg.data;
           // prevを使わないと古いplayersを参照してしまう！要確認
           setPlayers((prev) => [...prev, data]);
-        } else if (msg.type === "player_left") {
-          console.log("player left!");
+        } else if (msg.type === 'player_left') {
+          console.log('player left!');
           const data = msg.data;
           console.log(data);
           // 退出したプレイヤーのidと一致するplayerをfilter
           setPlayers((prev) => prev.filter((p) => p.name !== data.name));
         }
       } catch (e) {
-        console.error("ws message parse error", e);
+        console.error('ws message parse error', e);
       }
     };
     ws.onerror = () => {
-      console.error("ws connection error");
+      console.error('ws connection error');
     };
 
     return () => {
@@ -139,18 +129,14 @@ const PreGame = () => {
   // console.log("bingos!", bingos);
 
   if (!room || !name) {
-    navigate("/");
+    navigate('/');
     return <></>;
   }
 
   const me = players.find((p) => p.name === name);
   // チームごとの名前一覧だけの変数を用意
-  const teamAPlayerNames = players
-    .filter((p) => p.team === 0)
-    .map((p) => p.name);
-  const teamBPlayerNames = players
-    .filter((p) => p.team === 1)
-    .map((p) => p.name);
+  const teamAPlayerNames = players.filter((p) => p.team === 0).map((p) => p.name);
+  const teamBPlayerNames = players.filter((p) => p.team === 1).map((p) => p.name);
   const spectatorNames = players.filter((p) => p.team === 2).map((p) => p.name);
 
   //meがundefinedのエラー回避のための応急処置
@@ -161,7 +147,7 @@ const PreGame = () => {
   const showToast = (title: string) => {
     toaster.create({
       title: title,
-      type: "error",
+      type: 'error',
       closable: true,
       // placement: "top",
     });
@@ -169,12 +155,12 @@ const PreGame = () => {
 
   const startGame = async () => {
     if (!(await isRoomExisting(room))) {
-      showToast("部屋が存在しません");
+      showToast('部屋が存在しません');
       return;
     }
     //ビンゴ生成・チーム振り分け処理
     if (await isBingoExisting(room)) {
-      showToast("ゲームは開始されています！画面をリロードしてください！");
+      showToast('ゲームは開始されています！画面をリロードしてください！');
       return;
     }
     await createBingo(room);
@@ -182,22 +168,22 @@ const PreGame = () => {
   };
 
   const randomTeam = async () => {
-    if (!window.confirm("チームをランダムに振り分けます")) return;
+    if (!window.confirm('チームをランダムに振り分けます')) return;
     if (!room) return;
     await dividePlayers(room);
   };
 
   const leaveRoom = async () => {
-    if (!window.confirm("部屋を抜けますか？")) return;
+    if (!window.confirm('部屋を抜けますか？')) return;
     if (await isPlayerExisting(room, name)) {
-      console.log("existing");
+      console.log('existing');
       await leavePlayer(room, name);
     }
     navigate(`/lobby?name=${name}`);
   };
 
   const deleteRoom = async () => {
-    if (!window.confirm("部屋を解散しますか？")) return;
+    if (!window.confirm('部屋を解散しますか？')) return;
     if (room) {
       if (await isRoomExisting(room)) {
         await deleteRoomAPI(room);
@@ -208,14 +194,14 @@ const PreGame = () => {
 
   // name, room はクエリパラメータから取得する。バグったら修正
   const handleChangeTeam = async (team: number) => {
-    if (!window.confirm("チームを変更しますか？")) return;
+    if (!window.confirm('チームを変更しますか？')) return;
     if (!room || !name) return;
     await updatePlayerTeam(room, name, team);
   };
 
   const changeName = async () => {
     if (newName.length > 20) {
-      showToast("名前が長すぎます！");
+      showToast('名前が長すぎます！');
       return;
     }
     // 現在の自分を削除して新しい名前で参加し直す
@@ -231,7 +217,7 @@ const PreGame = () => {
   };
 
   const handleDeletePlayer = async (targetName: string) => {
-    if (!window.confirm("このプレイヤーを削除しますか？")) return;
+    if (!window.confirm('このプレイヤーを削除しますか？')) return;
     if (room) {
       await leavePlayer(room, targetName);
     }
@@ -249,14 +235,7 @@ const PreGame = () => {
   }
 
   if (bingos[0].cell_reses && bingos[1].cell_reses) {
-    return (
-      <GameStarted
-        room={room}
-        name={name}
-        me={me}
-        handleChangeTeam={handleChangeTeam}
-      />
-    );
+    return <GameStarted room={room} name={name} me={me} handleChangeTeam={handleChangeTeam} />;
   }
 
   return (
@@ -272,21 +251,12 @@ const PreGame = () => {
       )}
       <Container pt={20} centerContent w="350px">
         <Card.Root>
-          <Card.Header
-            display="flex"
-            flexDir="row"
-            justifyContent="space-between"
-            gap={2}
-          >
+          <Card.Header display="flex" flexDir="row" justifyContent="space-between" gap={2}>
             <Text textStyle="xl" fontWeight="bold">
               ゲーム開始前です！
             </Text>
             {/* <Button colorPalette="orange">名前を変える</Button> */}
-            <Dialog.Root
-              placement="center"
-              motionPreset="slide-in-bottom"
-              modal={true}
-            >
+            <Dialog.Root placement="center" motionPreset="slide-in-bottom" modal={true}>
               <Dialog.Trigger asChild>
                 <Button colorPalette="orange">名前を変更</Button>
               </Dialog.Trigger>

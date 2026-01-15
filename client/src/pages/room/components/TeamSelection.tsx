@@ -1,12 +1,5 @@
-import {
-  Button,
-  Center,
-  Flex,
-  HStack,
-  RadioGroup,
-  Text,
-} from "@chakra-ui/react";
-import type { ResponsePlayer } from "../../../types/restAPIResponse";
+import { Button, Center, Flex, HStack, RadioGroup, Text } from '@chakra-ui/react';
+import type { ResponsePlayer } from '../../../types/restAPIResponse';
 
 type TeamSelectionProps = {
   players: ResponsePlayer[];
@@ -15,16 +8,11 @@ type TeamSelectionProps = {
   onDeletePlayer?: (playerName: string) => void | Promise<void>;
 };
 
-const TeamSelection = ({
-  players,
-  name,
-  onChangeTeam,
-  onDeletePlayer,
-}: TeamSelectionProps) => {
+const TeamSelection = ({ players, name, onChangeTeam, onDeletePlayer }: TeamSelectionProps) => {
   const items = [
-    { label: "A", value: "0" },
-    { label: "B", value: "1" },
-    { label: "x", value: "2" },
+    { label: 'A', value: '0' },
+    { label: 'B', value: '1' },
+    { label: 'x', value: '2' },
   ];
 
   return (

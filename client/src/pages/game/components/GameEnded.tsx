@@ -1,5 +1,5 @@
-import { Button } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { Button } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 
 type GameEndedProps = {
   name: string;
@@ -11,9 +11,7 @@ const GameEnded = ({ name, room }: GameEndedProps) => {
   return (
     <>
       ゲームは終了されています！
-      <Button onClick={() => navigate(`/preGame?name=${name}&room=${room}`)}>
-        準備画面に戻る
-      </Button>
+      <Button onClick={() => navigate(`/preGame?name=${name}&room=${room}`)}>準備画面に戻る</Button>
     </>
   );
 };

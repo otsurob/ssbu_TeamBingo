@@ -1,9 +1,6 @@
-import { Button, Center, Flex, Spacer, Text } from "@chakra-ui/react";
-import { BingoTable } from "./BingoTable";
-import type {
-  ResponseBingo,
-  ResponsePlayer,
-} from "../../../types/restAPIResponse";
+import { Button, Center, Flex, Spacer, Text } from '@chakra-ui/react';
+import { BingoTable } from './BingoTable';
+import type { ResponseBingo, ResponsePlayer } from '../../../types/restAPIResponse';
 
 type NormalBingoProps = {
   team1Bingo: ResponseBingo;
@@ -20,7 +17,7 @@ type NormalBingoProps = {
     nextStatus: number,
     cellId: number,
     bingoId: number,
-    teamNumber: number
+    teamNumber: number,
   ) => void;
 };
 

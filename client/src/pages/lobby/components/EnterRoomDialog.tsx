@@ -1,12 +1,12 @@
-import { Button, CloseButton, Dialog, Input, Portal } from "@chakra-ui/react";
-import { useState } from "react";
-import type { ResponseRoom } from "../../../types/restAPIResponse";
-import { isPlayerExisting, isRoomExisting } from "../../../services/existing";
-import { toaster } from "../../../components/ui/toaster";
-import { checkRoomPassword } from "../../../api/roomAPIs";
-import { joinPlayer } from "../../../api/playerAPIs";
-import { WS_URL } from "../../../constants/constants";
-import { useNavigate } from "react-router-dom";
+import { Button, CloseButton, Dialog, Input, Portal } from '@chakra-ui/react';
+import { useState } from 'react';
+import type { ResponseRoom } from '../../../types/restAPIResponse';
+import { isPlayerExisting, isRoomExisting } from '../../../services/existing';
+import { toaster } from '../../../components/ui/toaster';
+import { checkRoomPassword } from '../../../api/roomAPIs';
+import { joinPlayer } from '../../../api/playerAPIs';
+import { WS_URL } from '../../../constants/constants';
+import { useNavigate } from 'react-router-dom';
 
 type EnterRoomDialogProps = {
   name: string;
@@ -14,13 +14,13 @@ type EnterRoomDialogProps = {
 };
 
 const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
-  const [enterRoomName, setEnterRoomName] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [enterRoomName, setEnterRoomName] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const navigate = useNavigate();
   const showToast = (title: string) => {
     toaster.create({
       title: title,
-      type: "error",
+      type: 'error',
       closable: true,
       // placement: "top",
     });
@@ -30,11 +30,11 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
       try {
         const ws = new WebSocket(`${WS_URL}/ws?room=${roomName}`);
         ws.onopen = () => {
-          console.log("websocket is opening");
+          console.log('websocket is opening');
           ws.close();
           resolve();
         };
-        ws.onerror = () => reject(new Error("WebSocket connection failed"));
+        ws.onerror = () => reject(new Error('WebSocket connection failed'));
       } catch (e) {
         reject(e);
       }
@@ -42,7 +42,7 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
   };
   const enterRoom = async () => {
     if (!(await isRoomExisting(enterRoomName))) {
-      showToast("部屋が存在しません");
+      showToast('部屋が存在しません');
       return;
     }
     const isValidPasswordRes = await checkRoomPassword(enterRoomName, password);
@@ -50,7 +50,7 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
     if (isValidPasswordRes) {
       //同じ名前のチェック
       if (await isPlayerExisting(enterRoomName, name)) {
-        showToast("同じ名前のプレイヤーが部屋に存在します！");
+        showToast('同じ名前のプレイヤーが部屋に存在します！');
         return;
       }
       //joinplayer
@@ -60,24 +60,20 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
       try {
         await connectWebSocket(enterRoomName);
       } catch (e) {
-        showToast("WebSocket 接続に失敗しました");
+        showToast('WebSocket 接続に失敗しました');
         console.log(e);
         return;
       }
       navigate(`/preGame?name=${name}&room=${room}`);
     } else {
-      showToast("パスワードが間違っています");
+      showToast('パスワードが間違っています');
       // navigate(`/lobby?name=${name}`);
       // window.location.reload();
     }
   };
   return (
     <>
-      <Dialog.Root
-        placement="center"
-        motionPreset="slide-in-bottom"
-        modal={true}
-      >
+      <Dialog.Root placement="center" motionPreset="slide-in-bottom" modal={true}>
         <Dialog.Trigger asChild>
           <Button onClick={() => setEnterRoomName(room.room_name)}>入室</Button>
         </Dialog.Trigger>
@@ -89,11 +85,7 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
                 <Dialog.Title>パスワード入力</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
-                <Input
-                  type="text"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} />
               </Dialog.Body>
               <Dialog.Footer>
                 <Dialog.ActionTrigger asChild>
