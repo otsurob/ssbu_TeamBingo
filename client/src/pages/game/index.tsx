@@ -24,7 +24,8 @@ export default function Game() {
 
   useEffect(() => {
     return () => {
-      toaster.dismiss(); // 全トースト閉じる
+      // Defer to microtask to avoid flushSync warning on unmount
+      queueMicrotask(() => toaster.dismiss());
     };
   }, []);
 

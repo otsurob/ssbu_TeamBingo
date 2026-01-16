@@ -1,17 +1,22 @@
 import { useNavigate } from 'react-router-dom';
 import type { ResponsePlayer } from '../../../types/restAPIResponse';
 import { Button, Card, CardBody, Container, Flex, Spacer, Text } from '@chakra-ui/react';
+import { updatePlayerTeam } from '../../../api/playerAPIs';
 
 type GameStartedProps = {
   room: string;
   name: string;
   me: ResponsePlayer;
-  handleChangeTeam: (teamNumber: number) => void;
 };
 
-const GameStarted = ({ room, name, me, handleChangeTeam }: GameStartedProps) => {
+const GameStarted = ({ room, name, me }: GameStartedProps) => {
   const navigate = useNavigate();
   const TEAM: string[] = ['A', 'B']; //応急処置
+  const handleChangeTeam = async (team: number) => {
+    if (!window.confirm('チームを変更しますか？')) return;
+    if (!room || !name) return;
+    await updatePlayerTeam(room, name, team);
+  };
 
   return (
     <Container pt={20} centerContent w="350px">
