@@ -1,3 +1,5 @@
+//使ってない
+
 import { Button, Center, Flex, Spacer, Text } from '@chakra-ui/react';
 import { BingoTable } from './BingoTable';
 import type { ResponseBingo, ResponsePlayer } from '../../../types/restAPIResponse';

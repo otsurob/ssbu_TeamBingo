@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMedia } from 'use-media';
-import { SmallBingoTable } from './components/SmallBingoTable';
-import { NormalBingoTable } from './components/NormalBingoTable';
 import { Box } from '@chakra-ui/react';
 import type { ResponseBingo, ResponsePlayer } from '../../types/restAPIResponse';
-import { isPlayerExisting } from '../../services/existing';
-import { fetchBingos, deleteBingos, updateCell } from '../../api/bingoAPIs';
-import { fetchPlayers, leavePlayer } from '../../api/playerAPIs';
+import { fetchBingos } from '../../api/bingoAPIs';
+import { fetchPlayers } from '../../api/playerAPIs';
 import { toaster } from '../../components/ui/toaster';
 import GameEnded from './components/GameEnded';
 import type { wsEventType } from '../../types/websocketEvent';
 import { connectRoomWebSocket } from '../../hooks/websocket';
+import GameBoard from './components/Game';
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -84,8 +81,6 @@ export default function Game() {
     return cleanup;
   }, [handleWsEvent, room]);
 
-  const isWide = useMedia({ minWidth: '1000px' });
-
   if (!room || !name) {
     navigate('/');
     return;
@@ -106,68 +101,6 @@ export default function Game() {
     }
   }
 
-  const deleteGame = async () => {
-    if (!window.confirm('ゲームを終了しますか？')) return;
-    const bingosRes = await fetchBingos(room);
-    //空のオブジェクトの配列が返る(要素2つ)
-    if (bingosRes[0].cell_reses) {
-      await deleteBingos(room);
-    }
-    navigate(`/preGame?name=${name}&room=${room}`);
-  };
-
-  const exitGame = async () => {
-    // if (window.confirm("部屋は残したまま退出しますか？")) {
-    //   await axios
-    //     .get(`${API_URL}/player?room=${room}&team=${team}`)
-    //     .then(async (res) => {
-    //       if (res.data.length !== 0) {
-    //         await axios.delete(
-    //           `${API_URL}/leaveOnePlayer?room=${room}&name=${name}&team=${team}`
-    //         );
-    //       }
-    //     });
-    //   navigate("/");
-    // }
-    if (!window.confirm('部屋から退出します。よろしいですか？')) return;
-    if (await isPlayerExisting(room, name)) {
-      await leavePlayer(room, name);
-    }
-    navigate(`/lobby?name=${name}`);
-  };
-
-  // BingoTableで定義していたセル更新関数をここで定義して子に渡す
-  const handleCellUpdate = async (
-    row: number,
-    col: number,
-    nextStatus: number,
-    cellId: number,
-    bingoId: number,
-    teamNumber: number,
-  ) => {
-    // 楽観的に即時反映
-    setBingos((prev) =>
-      prev.map((b) =>
-        // クリックしたビンゴのidを元に変更ビンゴを検知
-        b.id === bingoId
-          ? {
-              ...b,
-              cell_reses: b.cell_reses.map((c) =>
-                // クリックしたセルのidを元に変更セルを検知
-                c.id === cellId ? { ...c, status: nextStatus } : c,
-              ),
-            }
-          : b,
-      ),
-    );
-    try {
-      await updateCell(room, teamNumber, row, col, nextStatus);
-    } catch (e) {
-      // 失敗したら元に戻すなどの処理を入れてもよい
-      console.error('cell update failed', e);
-    }
-  };
-
   return (
     <div>
       {locked && (
@@ -185,33 +118,17 @@ export default function Game() {
           <GameEnded name={name} room={room} />
         </>
       ) : (
-        <>
-          {isWide ? (
-            <NormalBingoTable
-              team1Bingo={bingos[0]}
-              team2Bingo={bingos[1]}
-              team1Players={team1Players}
-              team2Players={team2Players}
-              deleteGame={deleteGame}
-              exitGame={exitGame}
-              teamNumber1={0}
-              teamNumber2={1}
-              onCellUpdate={handleCellUpdate}
-            />
-          ) : (
-            <SmallBingoTable
-              team1Bingo={bingos[0]}
-              team2Bingo={bingos[1]}
-              team1Players={team1Players}
-              team2Players={team2Players}
-              deleteGame={deleteGame}
-              exitGame={exitGame}
-              teamNumber1={0}
-              teamNumber2={1}
-              onCellUpdate={handleCellUpdate}
-            />
-          )}
-        </>
+        <GameBoard
+          team1Bingo={bingos[0]}
+          team2Bingo={bingos[1]}
+          team1Players={team1Players}
+          team2Players={team2Players}
+          room={room}
+          name={name}
+          setBingos={setBingos}
+          teamNumber1={0}
+          teamNumber2={1}
+        />
       )}
     </div>
   );
