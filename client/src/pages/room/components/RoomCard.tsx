@@ -10,6 +10,7 @@ import { isBingoExisting, isPlayerExisting, isRoomExisting } from '../../../serv
 import { createBingo } from '../../../api/bingoAPIs';
 import { dividePlayers, joinPlayer, leavePlayer, updatePlayerTeam } from '../../../api/playerAPIs';
 import { deleteRoom as deleteRoomAPI } from '../../../api/roomAPIs';
+import DeleteButton from '../../../components/DeleteButton';
 
 type RoomCardProps = {
   players: ResponsePlayer[];
@@ -122,9 +123,7 @@ const RoomCard = ({ players, name }: RoomCardProps) => {
       </CardBody>
       <CardFooter display="flex" justifyContent="space-between" gap={2}>
         <Button onClick={leaveRoom}>退出</Button>
-        <Button colorPalette="red" onClick={deleteRoom}>
-          削除
-        </Button>
+        <DeleteButton onClick={deleteRoom} />
       </CardFooter>
     </Card.Root>
   );

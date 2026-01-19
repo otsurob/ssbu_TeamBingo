@@ -5,7 +5,11 @@ type NameBarProps = {
 };
 
 const NameBar = ({ name }: NameBarProps) => {
-  return <Container backgroundColor="gray.200">{name}</Container>;
+  return (
+    <Container backgroundColor="gray.200" borderRadius="2xl">
+      {name}
+    </Container>
+  );
 };
 
 export default NameBar;

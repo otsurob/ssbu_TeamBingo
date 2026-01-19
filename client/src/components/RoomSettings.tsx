@@ -3,12 +3,16 @@
 import { Button, CloseButton, Container, Dialog, Portal } from '@chakra-ui/react';
 import type { ResponsePlayer } from '../types/restAPIResponse';
 import NameBar from './NameBar';
+import DeleteButton from './DeleteButton';
 
 type RoomSettingsProps = {
   players: ResponsePlayer[];
 };
 
 const RoomSettings = ({ players }: RoomSettingsProps) => {
+  const handleDeleteRoom = () => {
+    return;
+  };
   return (
     <Dialog.Root placement="center" motionPreset="slide-in-bottom" modal={true}>
       <Dialog.Trigger asChild>
@@ -19,12 +23,12 @@ const RoomSettings = ({ players }: RoomSettingsProps) => {
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>部屋を作成</Dialog.Title>
+              <Dialog.Title>部屋の設定</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
-              <Container>
+              <Container gap={5}>
                 {players.map((p) => (
-                  <Container display="flex" flexDir="row" justifyContent="space-between" gap={2}>
+                  <Container display="flex" flexDir="row" justifyContent="space-between" gap={3}>
                     <NameBar name={p.name} />
                     <Button>削除</Button>
                   </Container>
@@ -32,9 +36,14 @@ const RoomSettings = ({ players }: RoomSettingsProps) => {
               </Container>
             </Dialog.Body>
             <Dialog.Footer>
-              <Dialog.ActionTrigger asChild>
+              {/* <Dialog.ActionTrigger asChild>
                 <Button variant="outline">Cancel</Button>
-              </Dialog.ActionTrigger>
+              </Dialog.ActionTrigger> */}
+              <Container display="flex" flexDir="row" justifyContent="space-between" gap={3}>
+                <Button>部屋から退出</Button>
+                <Button>自分の名前を変更</Button>
+                <DeleteButton onClick={handleDeleteRoom} />
+              </Container>
             </Dialog.Footer>
             <Dialog.CloseTrigger asChild>
               <CloseButton size="md" />
