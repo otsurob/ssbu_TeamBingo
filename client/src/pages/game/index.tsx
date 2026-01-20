@@ -4,11 +4,12 @@ import { Box } from '@chakra-ui/react';
 import type { ResponseBingo, ResponsePlayer } from '../../types/restAPIResponse';
 import { fetchBingos } from '../../api/bingoAPIs';
 import { fetchPlayers } from '../../api/playerAPIs';
-import { toaster } from '../../components/ui/toaster';
 import GameEnded from './components/GameEnded';
 import type { wsEventType } from '../../types/websocketEvent';
 import { connectRoomWebSocket } from '../../hooks/websocket';
 import GameBoard from './components/Game';
+import { useAppToast } from '../../hooks/useAppToast';
+import { toaster } from '../../components/ui/toaster';
 
 export default function Game() {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -18,6 +19,7 @@ export default function Game() {
   const room = searchParams.get('room');
   const name = searchParams.get('name');
   const navigate = useNavigate();
+  const { showToast } = useAppToast();
 
   useEffect(() => {
     return () => {
@@ -55,7 +57,7 @@ export default function Game() {
         );
       } else if (msg.type === 'game_ended') {
         setLocked(true);
-        toaster.create({
+        showToast({
           title: 'ゲームが終了しました！',
           description: '右のボタンで準備画面に戻ってください',
           type: 'success',
@@ -67,7 +69,7 @@ export default function Game() {
         });
       }
     },
-    [name, navigate, room],
+    [name, navigate, room, showToast],
   );
 
   useEffect(() => {

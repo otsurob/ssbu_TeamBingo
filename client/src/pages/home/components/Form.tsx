@@ -1,26 +1,19 @@
 import { Button, Card, CardBody, Center, Container, Field, Input } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toaster } from '../../../components/ui/toaster';
+import { useAppToast } from '../../../hooks/useAppToast';
 
 const Form = () => {
   const [name, setName] = useState<string>('');
   const navigate = useNavigate();
-  const showToast = (title: string) => {
-    toaster.create({
-      title: title,
-      type: 'error',
-      closable: true,
-      // placement: "top",
-    });
-  };
+  const { showError } = useAppToast();
   const resister = async () => {
     if (name == '') {
-      showToast('名前を入力してください');
+      showError('名前を入力してください');
       return;
     }
     if (name.length > 20) {
-      showToast('名前が長すぎます！');
+      showError('名前が長すぎます！');
       return;
     }
     navigate(`lobby?name=${name}`);

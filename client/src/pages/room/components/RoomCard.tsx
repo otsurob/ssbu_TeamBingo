@@ -1,44 +1,36 @@
 import { Button, Card, CardBody, CardFooter, CardHeader, Text } from '@chakra-ui/react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState } from 'react';
 import type { ResponsePlayer } from '../../../types/restAPIResponse';
-import ChangeNameDialog from './ChangeNameDialog';
-import RoomSettings from '../../../components/RoomSettings';
 import TeamSelection from './TeamSelection';
-import { toaster } from '../../../components/ui/toaster';
 import { isBingoExisting, isPlayerExisting, isRoomExisting } from '../../../services/existing';
 import { createBingo } from '../../../api/bingoAPIs';
-import { dividePlayers, joinPlayer, leavePlayer, updatePlayerTeam } from '../../../api/playerAPIs';
+import { dividePlayers, leavePlayer, updatePlayerTeam } from '../../../api/playerAPIs';
 import { deleteRoom as deleteRoomAPI } from '../../../api/roomAPIs';
-import DeleteButton from '../../../components/DeleteButton';
+import { useAppToast } from '../../../hooks/useAppToast';
+import { DeleteButton } from '../../../components/CustomButton';
 
 type RoomCardProps = {
   players: ResponsePlayer[];
   name: string;
+  isRoomSetting: boolean;
+  onToggleRoomSetting: () => void;
 };
 
-const RoomCard = ({ players, name }: RoomCardProps) => {
+const RoomCard = ({ players, name, isRoomSetting, onToggleRoomSetting }: RoomCardProps) => {
   const [searchParams] = useSearchParams();
   const room = searchParams.get('room');
   const navigate = useNavigate();
-  const [newName, setNewName] = useState<string>('');
-
-  const showToast = (title: string) => {
-    toaster.create({
-      title,
-      type: 'error',
-      closable: true,
-    });
-  };
+  // const [newName, setNewName] = useState<string>('');
+  const { showError } = useAppToast();
 
   const startGame = async () => {
     if (!room) return;
     if (!(await isRoomExisting(room))) {
-      showToast('部屋が存在しません');
+      showError('部屋が存在しません');
       return;
     }
     if (await isBingoExisting(room)) {
-      showToast('ゲームは開始されています！画面をリロードしてください！');
+      showError('ゲームは開始されています！画面をリロードしてください！');
       return;
     }
     await createBingo(room);
@@ -55,21 +47,6 @@ const RoomCard = ({ players, name }: RoomCardProps) => {
     if (!window.confirm('チームを変更しますか？')) return;
     if (!room || !name) return;
     await updatePlayerTeam(room, name, team);
-  };
-
-  const changeName = async () => {
-    if (newName.length > 20) {
-      showToast('名前が長すぎます！');
-      return;
-    }
-    if (name && room) {
-      await leavePlayer(room, name);
-    }
-    if (room) {
-      await joinPlayer(room, newName, 2);
-    }
-    navigate(`/preGame?name=${newName}&room=${room}`);
-    window.location.reload();
   };
 
   const handleDeletePlayer = async (targetName: string) => {
@@ -98,18 +75,21 @@ const RoomCard = ({ players, name }: RoomCardProps) => {
     navigate(`/lobby?name=${name}`);
   };
 
+  if (!name || !room) {
+    return <></>;
+  }
+
   return (
     <Card.Root>
       <CardHeader display="flex" flexDir="row" justifyContent="space-between" gap={2}>
         <Text textStyle="xl" fontWeight="bold">
           ゲーム開始前です！
         </Text>
-        <ChangeNameDialog
-          newName={newName}
-          onChangeNameInput={(val) => setNewName(val)}
-          onSubmit={changeName}
-        />
-        <RoomSettings players={players} />
+        <Button variant="outline" onClick={onToggleRoomSetting}>
+          {isRoomSetting ? '戻る' : '設定'}
+        </Button>
+        {/* <ChangeNameDialog name={name} room={room} /> */}
+        {/* <RoomSettings players={players} /> */}
       </CardHeader>
       <CardBody gap="5">
         <Button onClick={startGame}>ゲーム開始</Button>

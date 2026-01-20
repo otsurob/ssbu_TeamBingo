@@ -2,11 +2,11 @@ import { Button, CloseButton, Dialog, Input, Portal } from '@chakra-ui/react';
 import { useState } from 'react';
 import type { ResponseRoom } from '../../../types/restAPIResponse';
 import { isPlayerExisting, isRoomExisting } from '../../../services/existing';
-import { toaster } from '../../../components/ui/toaster';
 import { checkRoomPassword } from '../../../api/roomAPIs';
 import { joinPlayer } from '../../../api/playerAPIs';
 import { useNavigate } from 'react-router-dom';
 import { testRoomWebSocketConnection } from '../../../hooks/websocket';
+import { useAppToast } from '../../../hooks/useAppToast';
 
 type EnterRoomDialogProps = {
   name: string;
@@ -17,17 +17,10 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
   const [enterRoomName, setEnterRoomName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const navigate = useNavigate();
-  const showToast = (title: string) => {
-    toaster.create({
-      title: title,
-      type: 'error',
-      closable: true,
-      // placement: "top",
-    });
-  };
+  const { showError } = useAppToast();
   const enterRoom = async () => {
     if (!(await isRoomExisting(enterRoomName))) {
-      showToast('部屋が存在しません');
+      showError('部屋が存在しません');
       return;
     }
     const isValidPasswordRes = await checkRoomPassword(enterRoomName, password);
@@ -35,7 +28,7 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
     if (isValidPasswordRes) {
       //同じ名前のチェック
       if (await isPlayerExisting(enterRoomName, name)) {
-        showToast('同じ名前のプレイヤーが部屋に存在します！');
+        showError('同じ名前のプレイヤーが部屋に存在します！');
         return;
       }
       //joinplayer
@@ -45,13 +38,13 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
       try {
         await testRoomWebSocketConnection(enterRoomName);
       } catch (e) {
-        showToast('WebSocket 接続に失敗しました');
+        showError('WebSocket 接続に失敗しました');
         console.log(e);
         return;
       }
       navigate(`/preGame?name=${name}&room=${room}`);
     } else {
-      showToast('パスワードが間違っています');
+      showError('パスワードが間違っています');
       // navigate(`/lobby?name=${name}`);
       // window.location.reload();
     }

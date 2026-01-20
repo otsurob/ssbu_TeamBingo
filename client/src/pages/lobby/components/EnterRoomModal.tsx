@@ -13,10 +13,10 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toaster } from '../../../components/ui/toaster';
 import { fetchRoom, createRoom } from '../../../api/roomAPIs';
 import { joinPlayer } from '../../../api/playerAPIs';
 import { fetchBingo } from '../../../api/bingoAPIs';
+import { useAppToast } from '../../../hooks/useAppToast';
 
 const EnterRoomModal = () => {
   const navigate = useNavigate();
@@ -26,14 +26,7 @@ const EnterRoomModal = () => {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('');
 
-  const showToast = (title: string) => {
-    toaster.create({
-      title: title,
-      type: 'error',
-      closable: true,
-      // placement: "top",
-    });
-  };
+  const { showError } = useAppToast();
 
   const makeRoom = async () => {
     if (name == '' || room == '') {
@@ -67,12 +60,12 @@ const EnterRoomModal = () => {
 
   const enterRoom = async () => {
     if (name == '' || room == '') {
-      showToast('名前と部屋IDを入力してください');
+      showError('名前と部屋IDを入力してください');
       return;
     }
     const bingoRes = await fetchBingo(room);
     if (bingoRes.length === 0) {
-      showToast('部屋が存在しません！');
+      showError('部屋が存在しません！');
       isRoomExisted = false;
     } else {
       isRoomExisted = true;

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResponseBingo, ResponsePlayer } from '../../types/restAPIResponse';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Container, Spinner } from '@chakra-ui/react';
-import { toaster } from '../../components/ui/toaster';
 import TeamArea from './components/TeamArea';
 import { fetchBingos } from '../../api/bingoAPIs';
 import { fetchPlayers } from '../../api/playerAPIs';
@@ -11,6 +10,8 @@ import SpectatorArea from './components/SpectatorArea';
 import type { wsEventType } from '../../types/websocketEvent';
 import RoomCard from './components/RoomCard';
 import { connectRoomWebSocket } from '../../hooks/websocket';
+import { useAppToast } from '../../hooks/useAppToast';
+import RoomSettingCard from './components/RoomSettingCard';
 
 const PreGame = () => {
   const [bingos, setBingos] = useState<ResponseBingo[]>([]);
@@ -23,6 +24,8 @@ const PreGame = () => {
   const startedRef = useRef(false);
   const timerRef = useRef<number | null>(null);
   const [locked, setLocked] = useState(false);
+  const { showToast } = useAppToast();
+  const [isRoomSetting, setIsRoomSetting] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,7 +63,7 @@ const PreGame = () => {
         if (startedRef.current) return; // 二重発火ガード
         startedRef.current = true;
         setLocked(true);
-        toaster.create({
+        showToast({
           title: 'ゲームが開始されました！',
           description: '3秒後にゲーム画面へ移動します',
           type: 'success',
@@ -79,7 +82,7 @@ const PreGame = () => {
         setPlayers((prev) => prev.filter((p) => p.name !== data.name));
       }
     },
-    [name, navigate, room],
+    [name, navigate, room, showToast],
   );
 
   useEffect(() => {
@@ -131,7 +134,23 @@ const PreGame = () => {
         />
       )}
       <Container pt={20} centerContent w="350px">
-        <RoomCard players={players} name={name} />
+        {isRoomSetting ? (
+          <RoomSettingCard
+            name={name}
+            room={room}
+            players={players}
+            isRoomSetting={isRoomSetting}
+            //ここで前の値と切り替える処理の関数を渡している。ただのset関数を渡しているわけではない
+            onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
+          />
+        ) : (
+          <RoomCard
+            players={players}
+            name={name}
+            isRoomSetting={isRoomSetting}
+            onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
+          />
+        )}
         <TeamArea teamNum={0} playerNames={teamAPlayerNames} me={me} />
         <TeamArea teamNum={1} playerNames={teamBPlayerNames} me={me} />
         <SpectatorArea spectatorNames={spectatorNames} me={me} />
