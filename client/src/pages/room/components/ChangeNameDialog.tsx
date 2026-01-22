@@ -40,9 +40,10 @@ const ChangeNameDialog = ({ name, room }: ChangeNameDialogProps) => {
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>新しい名前を入力してください</Dialog.Title>
+              <Dialog.Title>プレイヤーネームの変更</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
+              新しい名前を入力してください
               <Input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
             </Dialog.Body>
             <Dialog.Footer>

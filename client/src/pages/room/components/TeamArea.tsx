@@ -1,4 +1,4 @@
-import { Card, Separator } from '@chakra-ui/react';
+import { Card, Separator, Stack } from '@chakra-ui/react';
 import NameBar from '../../../components/NameBar';
 import type { ResponsePlayer } from '../../../types/restAPIResponse';
 import { updatePlayerTeam } from '../../../api/playerAPIs';
@@ -6,7 +6,7 @@ import { updatePlayerTeam } from '../../../api/playerAPIs';
 type TeamAreaProps = {
   teamNum: number;
   playerNames: string[];
-  me: ResponsePlayer;
+  me: ResponsePlayer | undefined;
 };
 
 const TeamArea = ({ teamNum, playerNames, me }: TeamAreaProps) => {
@@ -16,6 +16,7 @@ const TeamArea = ({ teamNum, playerNames, me }: TeamAreaProps) => {
   const playerColor = color + '.200';
 
   const changeTeam = async () => {
+    if (!me) return; //観戦者の対応
     if (me.team === teamNum) return;
     if (!window.confirm('チームを変更しますか？')) return;
     //呼ぶのにmeの値使っていいのかね
@@ -36,9 +37,11 @@ const TeamArea = ({ teamNum, playerNames, me }: TeamAreaProps) => {
       </Card.Header>
       <Separator />
       <Card.Body backgroundColor={playerColor} gap={3}>
-        {playerNames.map((p) => (
-          <NameBar name={p} key={p} />
-        ))}
+        <Stack>
+          {playerNames.map((p) => (
+            <NameBar name={p} key={p} />
+          ))}
+        </Stack>
       </Card.Body>
     </Card.Root>
   );

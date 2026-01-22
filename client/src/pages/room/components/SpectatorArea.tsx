@@ -1,4 +1,4 @@
-import { Card, Separator } from '@chakra-ui/react';
+import { Card, Separator, Stack } from '@chakra-ui/react';
 import type { ResponsePlayer } from '../../../types/restAPIResponse';
 import NameBar from '../../../components/NameBar';
 import { updatePlayerTeam } from '../../../api/playerAPIs';
@@ -6,12 +6,13 @@ import { updatePlayerTeam } from '../../../api/playerAPIs';
 type SpectatorAreaProps = {
   // room: string,
   // name: string,
-  me: ResponsePlayer;
+  me: ResponsePlayer | undefined;
   spectatorNames: string[];
 };
 
 const SpectatorArea = ({ me, spectatorNames }: SpectatorAreaProps) => {
   const changeTeam = async () => {
+    if (!me) return; //観戦者の対応
     if (me.team === 2) return;
     if (!window.confirm('チームを変更しますか？')) return;
     //呼ぶのにmeの値使っていいのかね
@@ -32,9 +33,11 @@ const SpectatorArea = ({ me, spectatorNames }: SpectatorAreaProps) => {
       </Card.Header>
       <Separator />
       <Card.Body backgroundColor="green.200">
-        {spectatorNames.map((p) => (
-          <NameBar name={p} key={p} />
-        ))}
+        <Stack>
+          {spectatorNames.map((p) => (
+            <NameBar name={p} key={p} />
+          ))}
+        </Stack>
       </Card.Body>
     </Card.Root>
   );

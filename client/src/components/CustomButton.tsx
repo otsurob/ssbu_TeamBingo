@@ -1,5 +1,10 @@
 import { IconButton } from '@chakra-ui/react';
-import { MdOutlineDriveFileRenameOutline, MdExitToApp } from 'react-icons/md';
+import {
+  MdOutlineDriveFileRenameOutline,
+  MdExitToApp,
+  MdKeyboardReturn,
+  MdOutlineSettings,
+} from 'react-icons/md';
 import { FaTrashAlt } from 'react-icons/fa';
 
 type CustomButtonProps = {
@@ -24,8 +29,24 @@ export const RenameButton = ({ onClick }: CustomButtonProps) => {
 
 export const ExitButton = ({ onClick }: CustomButtonProps) => {
   return (
-    <IconButton aria-label="Exit" colorPalette="" variant="ghost" onClick={onClick}>
+    <IconButton aria-label="Exit" colorPalette="green" variant="ghost" onClick={onClick}>
       <MdExitToApp />
+    </IconButton>
+  );
+};
+
+export const ReturnButton = ({ onClick }: CustomButtonProps) => {
+  return (
+    <IconButton aria-label="return" variant="ghost" onClick={onClick}>
+      <MdKeyboardReturn />
+    </IconButton>
+  );
+};
+
+export const SettingButton = ({ onClick }: CustomButtonProps) => {
+  return (
+    <IconButton aria-label="return" variant="ghost" onClick={onClick}>
+      <MdOutlineSettings />
     </IconButton>
   );
 };

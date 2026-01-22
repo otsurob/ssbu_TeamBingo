@@ -42,7 +42,7 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
         console.log(e);
         return;
       }
-      navigate(`/preGame?name=${name}&room=${room}`);
+      navigate(`/preGame?name=${name}&room=${room.room_name}`);
     } else {
       showError('パスワードが間違っています');
       // navigate(`/lobby?name=${name}`);

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResponseBingo, ResponsePlayer } from '../../types/restAPIResponse';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Container, Spinner } from '@chakra-ui/react';
+import { Box, Container, Spinner, Stack } from '@chakra-ui/react';
 import TeamArea from './components/TeamArea';
 import { fetchBingos } from '../../api/bingoAPIs';
 import { fetchPlayers } from '../../api/playerAPIs';
@@ -110,9 +110,9 @@ const PreGame = () => {
   const spectatorNames = players.filter((p) => p.team === 2).map((p) => p.name);
 
   //meがundefinedのエラー回避のための応急処置
-  if (!me) {
-    return <>Loading...</>;
-  }
+  // if (!me) {
+  //   return <>Loading...</>;
+  // }
 
   if (bingos.length === 0) {
     return <Spinner size="lg" />;
@@ -134,26 +134,26 @@ const PreGame = () => {
         />
       )}
       <Container pt={20} centerContent w="350px">
-        {isRoomSetting ? (
-          <RoomSettingCard
-            name={name}
-            room={room}
-            players={players}
-            isRoomSetting={isRoomSetting}
-            //ここで前の値と切り替える処理の関数を渡している。ただのset関数を渡しているわけではない
-            onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
-          />
-        ) : (
-          <RoomCard
-            players={players}
-            name={name}
-            isRoomSetting={isRoomSetting}
-            onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
-          />
-        )}
-        <TeamArea teamNum={0} playerNames={teamAPlayerNames} me={me} />
-        <TeamArea teamNum={1} playerNames={teamBPlayerNames} me={me} />
-        <SpectatorArea spectatorNames={spectatorNames} me={me} />
+        <Stack gap={5} display="flex" flexDir="column" alignItems="center">
+          {isRoomSetting ? (
+            <RoomSettingCard
+              name={name}
+              room={room}
+              players={players}
+              //ここで前の値と切り替える処理の関数を渡している。ただのset関数を渡しているわけではない
+              onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
+            />
+          ) : (
+            <RoomCard
+              players={players}
+              name={name}
+              onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
+            />
+          )}
+          <TeamArea teamNum={0} playerNames={teamAPlayerNames} me={me} />
+          <TeamArea teamNum={1} playerNames={teamBPlayerNames} me={me} />
+          <SpectatorArea spectatorNames={spectatorNames} me={me} />
+        </Stack>
       </Container>
     </>
   );

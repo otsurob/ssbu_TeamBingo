@@ -6,9 +6,10 @@ import { updatePlayerTeam } from '../../../api/playerAPIs';
 type GameStartedProps = {
   room: string;
   name: string;
-  me: ResponsePlayer;
+  me: ResponsePlayer | undefined;
 };
 
+//TODO:meがundefined(観戦)の場合のチーム表示の処理が未実装
 const GameStarted = ({ room, name, me }: GameStartedProps) => {
   const navigate = useNavigate();
   const TEAM: string[] = ['A', 'B']; //応急処置

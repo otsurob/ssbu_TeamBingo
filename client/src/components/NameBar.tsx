@@ -6,7 +6,14 @@ type NameBarProps = {
 
 const NameBar = ({ name }: NameBarProps) => {
   return (
-    <Container backgroundColor="gray.200" borderRadius="2xl">
+    <Container
+      backgroundColor="gray.200"
+      borderRadius="2xl"
+      px={3}
+      // py={1}
+      display="flex"
+      alignItems="center"
+    >
       {name}
     </Container>
   );

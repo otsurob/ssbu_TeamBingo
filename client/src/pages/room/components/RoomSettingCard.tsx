@@ -1,64 +1,86 @@
-import { Button, Card, CardBody, CardFooter, CardHeader, Container, Text } from '@chakra-ui/react';
+import { Card, CardBody, CardFooter, CardHeader, Container, Stack, Text } from '@chakra-ui/react';
 import type { ResponsePlayer } from '../../../types/restAPIResponse';
 import NameBar from '../../../components/NameBar';
-import { DeleteButton, ExitButton } from '../../../components/CustomButton';
+import { DeleteButton, ExitButton, ReturnButton } from '../../../components/CustomButton';
 import ChangeNameDialog from './ChangeNameDialog';
+import AlertDialog from '../../../components/AlertDialog';
+import { useNavigate } from 'react-router-dom';
+import { deleteRoom } from '../../../api/roomAPIs';
+import { leavePlayer } from '../../../api/playerAPIs';
 
 type RoomSettingCardProps = {
   name: string;
   room: string;
   players: ResponsePlayer[];
-  isRoomSetting: boolean;
   onToggleRoomSetting: () => void;
 };
 
-const RoomSettingCard = ({
-  name,
-  room,
-  players,
-  isRoomSetting,
-  onToggleRoomSetting,
-}: RoomSettingCardProps) => {
-  const handleDeleteRoom = () => {
+const RoomSettingCard = ({ name, room, players, onToggleRoomSetting }: RoomSettingCardProps) => {
+  const navigate = useNavigate();
+  const handleDeleteRoom = async () => {
+    await deleteRoom(room);
+    navigate(`/lobby?name=${name}`);
     return;
   };
-  const handleDeletePlayer = () => {
+  const handleDeletePlayer = async (player: string) => {
+    await leavePlayer(room, player);
     return;
   };
-  const handleExitRoom = () => {
+  const handleExitRoom = async () => {
+    await leavePlayer(room, name);
+    navigate(`/lobby?name=${name}`);
     return;
   };
   return (
-    <Card.Root>
+    <Card.Root w="40vw">
       <CardHeader display="flex" flexDir="row" justifyContent="space-between" gap={2}>
         <Text textStyle="xl" fontWeight="bold">
           部屋の設定を行えます
         </Text>
-        <Button variant="outline" onClick={onToggleRoomSetting}>
-          {isRoomSetting ? '戻る' : '設定'}
-        </Button>
+        <ReturnButton onClick={onToggleRoomSetting} />
       </CardHeader>
       <CardBody gap="5">
-        <Container gap={5}>
+        <Stack>
           {players.map((p) => (
             <Container
               display="flex"
               flexDir="row"
               justifyContent="space-between"
-              gap={3}
+              gap={2}
               key={p.id}
             >
               <NameBar name={p.name} />
-              <DeleteButton onClick={handleDeletePlayer} />
+              <AlertDialog
+                trigger={<DeleteButton />}
+                title="プレイヤーを削除しますか？"
+                message={`${p.name} さんを部屋から削除します。`}
+                confirmLabel="削除"
+                cancelLabel="キャンセル"
+                onConfirm={() => handleDeletePlayer(p.name)}
+              />
             </Container>
           ))}
-        </Container>
+        </Stack>
       </CardBody>
       <CardFooter display="flex" justifyContent="space-between" gap={2}>
         <Container display="flex" flexDir="row" justifyContent="space-between" gap={3}>
-          <ExitButton onClick={handleExitRoom} />
+          <AlertDialog
+            trigger={<ExitButton />}
+            title="部屋から退出しますか？"
+            message="部屋から退出します。部屋自体は残ります。"
+            confirmLabel="退出する"
+            cancelLabel="キャンセル"
+            onConfirm={handleExitRoom}
+          />
           <ChangeNameDialog name={name} room={room} />
-          <DeleteButton onClick={handleDeleteRoom} />
+          <AlertDialog
+            trigger={<DeleteButton />}
+            title="部屋を削除しますか？"
+            message="この部屋を完全に削除します。"
+            confirmLabel="削除する"
+            cancelLabel="キャンセル"
+            onConfirm={handleDeleteRoom}
+          />
         </Container>
       </CardFooter>
     </Card.Root>
