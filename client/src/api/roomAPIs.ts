@@ -28,6 +28,6 @@ export const createRoom = async (roomName: string, password: string) => {
 };
 
 export const deleteRoom = async (room: string) => {
-  const res = await axios.delete(`${API_URL}/deleteRoom/${room}`);
+  const res = await axios.delete(`${API_URL}/deleteRoom?room=${room}`);
   return res.data;
 };

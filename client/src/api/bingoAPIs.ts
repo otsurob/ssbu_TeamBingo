@@ -33,6 +33,6 @@ export const updateCell = async (
 };
 
 export const deleteBingos = async (room: string) => {
-  const res = await axios.delete(`${API_URL}/bingos/${room}`);
+  const res = await axios.delete(`${API_URL}/deleteBingos?room=${room}`);
   return res.data;
 };

@@ -41,6 +41,6 @@ export const dividePlayers = async (room: string) => {
 };
 
 export const leavePlayer = async (room: string, name: string) => {
-  const res = await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+  const res = await axios.delete(`${API_URL}/deleteOnePlayer?room=${room}&name=${name}`);
   return res.data;
 };
