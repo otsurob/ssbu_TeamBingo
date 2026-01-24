@@ -1,8 +1,14 @@
 package usecase
 
 import (
+	"errors"
 	"server/domain"
 	"server/repository"
+)
+
+var (
+	ErrRoomAlreadyExists   = errors.New("room already exists")
+	ErrPlayerAlreadyExists = errors.New("player already exists in the room")
 )
 
 type IRoomUsecase interface {
@@ -14,7 +20,7 @@ type IRoomUsecase interface {
 	GetPlayer(roomName string, name string) (domain.PlayerResponse, error)
 	GetPlayers(room string) ([]domain.PlayerResponse, error)
 	CreatePlayer(player domain.Player, roomName string) (domain.PlayerResponse, error)
-	UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error)
+	UpdatePlayer(player domain.Player, name string, roomName string) (domain.PlayerResponse, error)
 	DividePlayerTeam(roomName string) ([]domain.PlayerResponse, error)
 	DeletePlayer(room string) error
 	DeleteOnePlayer(room string, name string) error
@@ -27,7 +33,7 @@ type roomUsecase struct {
 }
 
 func NewRoomUsecase(rr repository.IRoomRepository, tx repository.Transaction, ep IEventPublisher) IRoomUsecase {
-	return &roomUsecase{rr, tx, ep}
+	return &roomUsecase{rr: rr, tx: tx, ep: ep}
 }
 
 func (ru *roomUsecase) GetAllRooms() ([]domain.RoomResponse, error) {
@@ -60,6 +66,15 @@ func (ru *roomUsecase) GetRoom(roomName string) (domain.RoomResponse, error) {
 }
 
 func (ru *roomUsecase) CreateRoom(room domain.Room) (domain.RoomResponse, error) {
+
+	// 重複チェック（room_name はユニーク想定）
+	existing := domain.Room{}
+	if err := ru.rr.GetRoom(&existing, room.RoomName); err != nil {
+		return domain.RoomResponse{}, err
+	}
+	if existing.ID != 0 {
+		return domain.RoomResponse{}, ErrRoomAlreadyExists
+	}
 
 	if err := ru.rr.CreateRoom(&room); err != nil {
 		return domain.RoomResponse{}, err
@@ -129,6 +144,16 @@ func (ru *roomUsecase) CreatePlayer(player domain.Player, roomName string) (doma
 		return domain.PlayerResponse{}, err
 	}
 	player.RoomId = room.ID
+
+	// 同一ルーム内での名前重複チェック
+	existing := domain.Player{}
+	if err := ru.rr.GetPlayer(&existing, roomName, player.Name); err != nil {
+		return domain.PlayerResponse{}, err
+	}
+	if existing.ID != 0 {
+		return domain.PlayerResponse{}, ErrPlayerAlreadyExists
+	}
+
 	if err := ru.rr.CreatePlayer(&player); err != nil {
 		return domain.PlayerResponse{}, err
 	}
@@ -148,12 +173,12 @@ func (ru *roomUsecase) CreatePlayer(player domain.Player, roomName string) (doma
 	return resPlayer, nil
 }
 
-func (ru *roomUsecase) UpdatePlayerTeam(player domain.Player, name string, roomName string) (domain.PlayerResponse, error) {
+func (ru *roomUsecase) UpdatePlayer(player domain.Player, name string, roomName string) (domain.PlayerResponse, error) {
 	var updatedPlayer domain.Player
 
 	err := ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
 		// まず更新
-		if err := rr.UpdatePlayerTeam(&player, roomName, name); err != nil {
+		if err := rr.UpdatePlayer(&player, roomName, name); err != nil {
 			return err
 		}
 		// 更新後の正しい値を取得してイベント用に使う
@@ -200,7 +225,10 @@ func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerRespons
 		newPlayers := domain.RandomTeamSepalator(players)
 		for i, v := range newPlayers {
 			v.Team = domain.Team(i % 2)
-			if err := rr.UpdatePlayerTeam(&v, roomName, v.Name); err != nil {
+			// Divide はチームだけを更新したいので、Name は空にして team 更新を選択させる
+			updateTarget := v
+			updateTarget.Name = ""
+			if err := rr.UpdatePlayer(&updateTarget, roomName, v.Name); err != nil {
 				return err
 			}
 			playerRes := domain.PlayerResponse{
@@ -240,8 +268,15 @@ func (ru *roomUsecase) DeletePlayer(roomName string) error {
 }
 
 func (ru *roomUsecase) DeleteOnePlayer(roomName string, name string) error {
+	var leftPlayer domain.Player
+	if err := ru.rr.GetPlayer(&leftPlayer, roomName, name); err != nil {
+		return err
+	}
 	if err := ru.rr.DeleteOnePlayer(roomName, name); err != nil {
 		return err
+	}
+	if ru.ep != nil {
+		_ = ru.ep.PushPlayerLeft(roomName, leftPlayer)
 	}
 	return nil
 }

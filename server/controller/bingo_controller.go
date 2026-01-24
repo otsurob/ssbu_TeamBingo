@@ -72,7 +72,8 @@ func (tc *bingoController) UpdateCell(c echo.Context) error {
 }
 
 func (tc *bingoController) DeleteBingos(c echo.Context) error {
-	roomName := c.Param("room")
+	// roomName := c.Param("room")
+	roomName := c.QueryParam("room")
 
 	err := tc.tu.DeleteBingos(roomName)
 	if err != nil {
