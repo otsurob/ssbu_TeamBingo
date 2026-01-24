@@ -5,7 +5,7 @@ import {
   MdKeyboardReturn,
   MdOutlineSettings,
 } from 'react-icons/md';
-import { FaTrashAlt } from 'react-icons/fa';
+import { FaHome, FaTrashAlt } from 'react-icons/fa';
 
 type CustomButtonProps = {
   onClick?: () => void;
@@ -45,8 +45,16 @@ export const ReturnButton = ({ onClick }: CustomButtonProps) => {
 
 export const SettingButton = ({ onClick }: CustomButtonProps) => {
   return (
-    <IconButton aria-label="return" variant="ghost" onClick={onClick}>
+    <IconButton aria-label="setting" variant="ghost" onClick={onClick}>
       <MdOutlineSettings />
+    </IconButton>
+  );
+};
+
+export const HomeButton = ({ onClick }: CustomButtonProps) => {
+  return (
+    <IconButton aria-label="setting" variant="ghost" onClick={onClick}>
+      <FaHome />
     </IconButton>
   );
 };

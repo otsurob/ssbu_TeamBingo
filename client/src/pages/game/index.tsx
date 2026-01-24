@@ -39,6 +39,8 @@ export default function Game() {
     fetchData();
   }, [room]);
 
+  const me = players.find((p) => p.name === name);
+
   const handleWsEvent = useCallback(
     (msg: wsEventType) => {
       if (msg.type === 'cell_updated') {
@@ -130,6 +132,7 @@ export default function Game() {
           setBingos={setBingos}
           teamNumber1={0}
           teamNumber2={1}
+          me={me}
         />
       )}
     </div>

@@ -1,13 +1,15 @@
 import { Button, CloseButton, Dialog, Portal } from '@chakra-ui/react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 type AlertDialogProps = {
   title: string;
   message: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   trigger?: ReactNode;
   buttonTitle?: string;
   confirmLabel?: string;
+  confirmColor?: string;
   cancelLabel?: string;
 };
 
@@ -18,10 +20,18 @@ const AlertDialog = ({
   trigger,
   buttonTitle = 'Open',
   confirmLabel = 'Delete',
+  confirmColor = 'red',
   cancelLabel = 'Cancel',
 }: AlertDialogProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleConfirm = async () => {
+    await onConfirm();
+    setOpen(false);
+  };
+
   return (
-    <Dialog.Root role="alertdialog">
+    <Dialog.Root role="alertdialog" open={open} onOpenChange={(details) => setOpen(details.open)}>
       <Dialog.Trigger asChild>
         {trigger ?? (
           <Button variant="outline" size="sm">
@@ -41,7 +51,7 @@ const AlertDialog = ({
               <Dialog.ActionTrigger asChild>
                 <Button variant="outline">{cancelLabel}</Button>
               </Dialog.ActionTrigger>
-              <Button colorPalette="red" onClick={onConfirm}>
+              <Button colorPalette={confirmColor} onClick={handleConfirm}>
                 {confirmLabel}
               </Button>
             </Dialog.Footer>

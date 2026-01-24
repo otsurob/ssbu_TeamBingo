@@ -138,17 +138,14 @@ const PreGame = () => {
           {isRoomSetting ? (
             <RoomSettingCard
               name={name}
+              me={me}
               room={room}
               players={players}
               //ここで前の値と切り替える処理の関数を渡している。ただのset関数を渡しているわけではない
               onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
             />
           ) : (
-            <RoomCard
-              players={players}
-              name={name}
-              onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
-            />
+            <RoomCard name={name} onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)} />
           )}
           <TeamArea teamNum={0} playerNames={teamAPlayerNames} me={me} />
           <TeamArea teamNum={1} playerNames={teamBPlayerNames} me={me} />

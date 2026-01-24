@@ -10,12 +10,19 @@ import { leavePlayer } from '../../../api/playerAPIs';
 
 type RoomSettingCardProps = {
   name: string;
+  me: ResponsePlayer | undefined;
   room: string;
   players: ResponsePlayer[];
   onToggleRoomSetting: () => void;
 };
 
-const RoomSettingCard = ({ name, room, players, onToggleRoomSetting }: RoomSettingCardProps) => {
+const RoomSettingCard = ({
+  name,
+  me,
+  room,
+  players,
+  onToggleRoomSetting,
+}: RoomSettingCardProps) => {
   const navigate = useNavigate();
   const handleDeleteRoom = async () => {
     await deleteRoom(room);
@@ -32,7 +39,7 @@ const RoomSettingCard = ({ name, room, players, onToggleRoomSetting }: RoomSetti
     return;
   };
   return (
-    <Card.Root w="40vw">
+    <Card.Root w="350px">
       <CardHeader display="flex" flexDir="row" justifyContent="space-between" gap={2}>
         <Text textStyle="xl" fontWeight="bold">
           部屋の設定を行えます
@@ -49,7 +56,7 @@ const RoomSettingCard = ({ name, room, players, onToggleRoomSetting }: RoomSetti
               gap={2}
               key={p.id}
             >
-              <NameBar name={p.name} />
+              <NameBar name={p.name} myName={me?.name} />
               <AlertDialog
                 trigger={<DeleteButton />}
                 title="プレイヤーを削除しますか？"

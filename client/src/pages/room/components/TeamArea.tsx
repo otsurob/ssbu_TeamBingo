@@ -16,7 +16,7 @@ const TeamArea = ({ teamNum, playerNames, me }: TeamAreaProps) => {
   const playerColor = color + '.200';
 
   const changeTeam = async () => {
-    if (!me) return; //観戦者の対応
+    if (!me) return; //観戦者がチーム変更できないように
     if (me.team === teamNum) return;
     if (!window.confirm('チームを変更しますか？')) return;
     //呼ぶのにmeの値使っていいのかね
@@ -39,7 +39,7 @@ const TeamArea = ({ teamNum, playerNames, me }: TeamAreaProps) => {
       <Card.Body backgroundColor={playerColor} gap={3}>
         <Stack>
           {playerNames.map((p) => (
-            <NameBar name={p} key={p} />
+            <NameBar name={p} myName={me?.name} key={p} />
           ))}
         </Stack>
       </Card.Body>

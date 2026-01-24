@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ResponsePlayer } from '../../../types/restAPIResponse';
 import { Button, Card, CardBody, Container, Flex, Spacer, Text } from '@chakra-ui/react';
 import { updatePlayerTeam } from '../../../api/playerAPIs';
+import AlertDialog from '../../../components/AlertDialog';
 
 type GameStartedProps = {
   room: string;
@@ -14,7 +15,7 @@ const GameStarted = ({ room, name, me }: GameStartedProps) => {
   const navigate = useNavigate();
   const TEAM: string[] = ['A', 'B']; //応急処置
   const handleChangeTeam = async (team: number) => {
-    if (!window.confirm('チームを変更しますか？')) return;
+    // if (!window.confirm('チームを変更しますか？')) return;
     if (!room || !name) return;
     await updatePlayerTeam(room, name, team);
   };
@@ -26,7 +27,7 @@ const GameStarted = ({ room, name, me }: GameStartedProps) => {
           <Text textStyle="xl" fontWeight="bold">
             ゲームが開始されています！
           </Text>
-          {me?.team === 2 ? (
+          {!me || me?.team === 2 ? (
             <Text>あなたはゲームに参加していません</Text>
           ) : (
             <>
@@ -36,9 +37,23 @@ const GameStarted = ({ room, name, me }: GameStartedProps) => {
           <Button onClick={() => navigate(`/game?name=${name}&room=${room}`)}>ゲーム画面へ</Button>
           <Text textStyle="md">チームを指定して参加</Text>
           <Flex flexWrap="wrap" flexDirection="row">
-            <Button onClick={() => handleChangeTeam(0)}>チーム：A</Button>
+            <AlertDialog
+              title="チーム変更"
+              message="チームをAに変更します。よろしいですか？（このボタンでは画面の切り替えは行われないので、上部ボタンでゲーム画面に移動してください）"
+              confirmColor="green"
+              confirmLabel="変更"
+              onConfirm={() => handleChangeTeam(0)}
+              trigger={<Button backgroundColor="red.500">チーム：A</Button>}
+            />
             <Spacer />
-            <Button onClick={() => handleChangeTeam(1)}>チーム：B</Button>
+            <AlertDialog
+              title="チーム変更"
+              message="チームをBに変更します。よろしいですか？（このボタンでは画面の切り替えは行われないので、上部ボタンでゲーム画面に移動してください）"
+              confirmColor="green"
+              confirmLabel="変更"
+              onConfirm={() => handleChangeTeam(1)}
+              trigger={<Button backgroundColor="blue.500">チーム：B</Button>}
+            />
           </Flex>
         </CardBody>
       </Card.Root>
