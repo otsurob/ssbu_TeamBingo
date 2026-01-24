@@ -30,12 +30,12 @@ const EnterRoomModal = () => {
 
   const makeRoom = async () => {
     if (name == '' || room == '') {
-      showToast('名前と部屋IDを入力してください');
+      showError('名前と部屋IDを入力してください');
       return;
     }
     const existingRoom = await fetchRoom(room);
     if (existingRoom.room_name !== '') {
-      showToast('その名前の部屋はすでに存在します！');
+      showError('その名前の部屋はすでに存在します！');
       isRoomExisted = true;
     } else {
       isRoomExisted = false;

@@ -6,7 +6,7 @@ type ToastOptions = {
   title: string;
   description?: string;
   type?: ToastType;
-  duration?: number | null;
+  duration?: number;
   closable?: boolean;
   // その他のオプションが必要になったらここに追加
   action?: {
