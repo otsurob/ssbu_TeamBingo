@@ -1,6 +1,6 @@
-import axios from "axios";
-import { API_URL } from "../constants/constants";
-import type { CellResponse, ResponseBingo } from "../types/restAPIResponse";
+import axios from 'axios';
+import { API_URL } from '../constants/constants';
+import type { CellResponse, ResponseBingo } from '../types/restAPIResponse';
 
 export const fetchBingos = async (room: string) => {
   const res = await axios.get<ResponseBingo[]>(`${API_URL}/bingos?room=${room}`);
@@ -23,16 +23,16 @@ export const updateCell = async (
   team: number,
   row: number,
   col: number,
-  status: number
+  status: number,
 ) => {
   const res = await axios.put<CellResponse>(
     `${API_URL}/updateCell?room=${room}&team=${team}&row=${row}&col=${col}`,
-    { status }
+    { status },
   );
   return res.data;
 };
 
 export const deleteBingos = async (room: string) => {
-  const res = await axios.delete(`${API_URL}/bingos/${room}`);
+  const res = await axios.delete(`${API_URL}/deleteBingos?room=${room}`);
   return res.data;
 };

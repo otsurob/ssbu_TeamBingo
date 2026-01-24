@@ -1,6 +1,6 @@
-import axios from "axios";
-import { API_URL } from "../constants/constants";
-import type { ResponsePlayer } from "../types/restAPIResponse";
+import axios from 'axios';
+import { API_URL } from '../constants/constants';
+import type { ResponsePlayer } from '../types/restAPIResponse';
 
 export const fetchPlayers = async (room: string) => {
   const res = await axios.get<ResponsePlayer[]>(`${API_URL}/players?room=${room}`);
@@ -41,6 +41,6 @@ export const dividePlayers = async (room: string) => {
 };
 
 export const leavePlayer = async (room: string, name: string) => {
-  const res = await axios.delete(`${API_URL}/leaveOnePlayer?room=${room}&name=${name}`);
+  const res = await axios.delete(`${API_URL}/deleteOnePlayer?room=${room}&name=${name}`);
   return res.data;
 };

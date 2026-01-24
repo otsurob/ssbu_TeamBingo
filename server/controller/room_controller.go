@@ -65,7 +65,8 @@ func (rc *roomController) CreateRoom(c echo.Context) error {
 }
 
 func (rc *roomController) DeleteRoom(c echo.Context) error {
-	roomName := c.Param("room")
+	// roomName := c.Param("room")
+	roomName := c.QueryParam("room")
 
 	err := rc.ru.DeleteRoom(roomName)
 	if err != nil {
@@ -154,7 +155,8 @@ func (rc *roomController) DividePlayerTeam(c echo.Context) error {
 }
 
 func (rc *roomController) DeletePlayer(c echo.Context) error {
-	roomName := c.Param("room")
+	// roomName := c.Param("room")
+	roomName := c.QueryParam("room")
 
 	err := rc.ru.DeletePlayer(roomName)
 	if err != nil {
