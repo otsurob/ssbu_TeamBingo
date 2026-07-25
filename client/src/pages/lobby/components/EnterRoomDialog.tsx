@@ -1,7 +1,7 @@
 import { Button, CloseButton, Dialog, Input, Portal } from '@chakra-ui/react';
 import { useState } from 'react';
 import type { ResponseRoom } from '../../../types/restAPIResponse';
-import { isRoomExisting } from '../../../services/existing';
+import { isPlayerExisting, isRoomExisting } from '../../../services/existing';
 import { checkRoomPassword } from '../../../api/roomAPIs';
 import { joinPlayer } from '../../../api/playerAPIs';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,12 @@ const EnterRoomDialog = ({ name, room }: EnterRoomDialogProps) => {
     const isValidPasswordRes = await checkRoomPassword(enterRoomName, password);
     console.log(isValidPasswordRes, password, enterRoomName);
     if (isValidPasswordRes) {
+      //同じ名前のチェック
+      if (await isPlayerExisting(enterRoomName, name)) {
+        showError('同じ名前のプレイヤーが部屋に存在します！');
+        return;
+      }
+      //joinplayer
       if (name) {
         await joinPlayer(enterRoomName, name, 2);
       }

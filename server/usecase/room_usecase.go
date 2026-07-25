@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrRoomAlreadyExists = errors.New("room already exists")
+	ErrRoomAlreadyExists   = errors.New("room already exists")
+	ErrPlayerAlreadyExists = errors.New("player already exists in the room")
 )
 
 type IRoomUsecase interface {
@@ -150,14 +151,7 @@ func (ru *roomUsecase) CreatePlayer(player domain.Player, roomName string) (doma
 		return domain.PlayerResponse{}, err
 	}
 	if existing.ID != 0 {
-		// 再入室として扱い、既存のチームなどの状態をそのまま返す。
-		// レコードの作成と player_joined イベントの送信は行わない。
-		return domain.PlayerResponse{
-			ID:       existing.ID,
-			Name:     existing.Name,
-			RoomName: existing.RoomName,
-			Team:     existing.Team,
-		}, nil
+		return domain.PlayerResponse{}, ErrPlayerAlreadyExists
 	}
 
 	if err := ru.rr.CreatePlayer(&player); err != nil {
