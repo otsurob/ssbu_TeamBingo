@@ -115,10 +115,12 @@ func (rc *roomController) CreatePlayer(c echo.Context) error {
 	}
 	playerRes, err := rc.ru.CreatePlayer(player, roomName)
 	if err != nil {
+		if errors.Is(err, usecase.ErrPlayerAlreadyExists) {
+			return c.JSON(http.StatusConflict, err.Error())
+		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// 同じ名前のプレイヤーの登録依頼時は登録処理はしないが、現状は201 Createdが返る。本当は200 OKが自然
 	return c.JSON(http.StatusCreated, playerRes)
 }
 
