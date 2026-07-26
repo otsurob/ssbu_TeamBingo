@@ -1,0 +1,48 @@
+name: GitHub Actions 動作確認
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 実行結果に表示するメッセージ
+        required: false
+        default: Hello from GitHub Actions!
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  actions-demo:
+    name: 動作確認
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 実行情報をログに表示
+        env:
+          INPUT_MESSAGE: ${{ inputs.message }}
+        run: |
+          echo "GitHub Actionsが正常に起動しました"
+          echo "メッセージ: ${INPUT_MESSAGE}"
+          echo "実行ユーザー: ${GITHUB_ACTOR}"
+          echo "ブランチ: ${GITHUB_REF_NAME}"
+          echo "コミット: ${GITHUB_SHA}"
+          echo "Runner OS: ${RUNNER_OS}"
+
+      - name: Job Summaryを作成
+        env:
+          INPUT_MESSAGE: ${{ inputs.message }}
+        run: |
+          {
+            echo "# ✅ GitHub Actions 動作確認成功"
+            echo
+            echo "| 項目 | 結果 |"
+            echo "| --- | --- |"
+            echo "| メッセージ | ${INPUT_MESSAGE} |"
+            echo "| 実行ユーザー | ${GITHUB_ACTOR} |"
+            echo "| ブランチ | ${GITHUB_REF_NAME} |"
+            echo "| Runner OS | ${RUNNER_OS} |"
+            echo
+            echo "次は、このWorkflowにRender APIの読み取り確認を追加できます。"
+          } >> "${GITHUB_STEP_SUMMARY}"
