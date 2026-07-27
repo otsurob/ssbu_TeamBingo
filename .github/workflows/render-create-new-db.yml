@@ -60,11 +60,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: バックエンドの接続先とRender上のDBを比較
+      - name: Render上の既存DBを確認
         id: find_database
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
         run: |
           set -euo pipefail
 
@@ -72,31 +71,6 @@ jobs:
             echo "::error::GitHub Actions SecretのRENDER_API_KEYが未設定です"
             exit 1
           fi
-
-          if [ -z "${RENDER_SERVICE_ID:-}" ]; then
-            echo "::error::GitHub Actions VariableのRENDER_SERVICE_IDが未設定です"
-            exit 1
-          fi
-
-          env_response="$(
-            curl \
-              --fail-with-body \
-              --silent \
-              --show-error \
-              --request GET \
-              --url "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/env-vars/POSTGRES_DB" \
-              --header "Accept: application/json" \
-              --header "Authorization: Bearer ${RENDER_API_KEY}"
-          )"
-
-          backend_postgres_db="$(jq -r '.value // empty' <<< "${env_response}")"
-
-          if [ -z "${backend_postgres_db}" ]; then
-            echo "::error::POSTGRES_DBの値を取得できませんでした"
-            exit 1
-          fi
-
-          echo "backend_postgres_db=${backend_postgres_db}" >> "${GITHUB_OUTPUT}"
 
           postgres_list="$(
             curl \
@@ -121,49 +95,26 @@ jobs:
           if [ "${postgres_count}" -eq 1 ]; then
             render_postgres_db="$(jq -r '.[0].postgres.databaseName // empty' <<< "${postgres_list}")"
             render_postgres_id="$(jq -r '.[0].postgres.id // empty' <<< "${postgres_list}")"
-            render_postgres_name="$(jq -r '.[0].postgres.name // empty' <<< "${postgres_list}")"
-            render_postgres_user="$(jq -r '.[0].postgres.databaseUser // empty' <<< "${postgres_list}")"
-            render_postgres_region="$(jq -r '.[0].postgres.region // empty' <<< "${postgres_list}")"
-            render_postgres_version="$(jq -r '.[0].postgres.version // empty' <<< "${postgres_list}")"
 
-            if [ -z "${render_postgres_db}" ] ||
-              [ -z "${render_postgres_id}" ] ||
-              [ -z "${render_postgres_name}" ] ||
-              [ -z "${render_postgres_user}" ] ||
-              [ -z "${render_postgres_region}" ] ||
-              [ -z "${render_postgres_version}" ]; then
+            if [ -z "${render_postgres_db}" ] || [ -z "${render_postgres_id}" ]; then
               echo "::error::Render上のPostgres情報を取得できませんでした"
               exit 1
             fi
 
-            if [ "${backend_postgres_db}" != "${render_postgres_db}" ]; then
-              echo "::error::バックエンドのPOSTGRES_DBとRender上のDBが一致しません"
-              echo "バックエンド: ${backend_postgres_db}"
-              echo "Render: ${render_postgres_db}"
-              exit 1
-            fi
-
-            echo "バックエンドのPOSTGRES_DB: ${backend_postgres_db}"
-            echo "Render上のdatabaseName: ${render_postgres_db}"
-            echo "一致確認: OK"
+            echo "既存DBのdatabaseName: ${render_postgres_db}"
+            echo "既存DBのPostgres ID: ${render_postgres_id}"
 
             echo "postgres_id=${render_postgres_id}" >> "${GITHUB_OUTPUT}"
             echo "postgres_db=${render_postgres_db}" >> "${GITHUB_OUTPUT}"
-            echo "postgres_name=${render_postgres_name}" >> "${GITHUB_OUTPUT}"
-            echo "postgres_user=${render_postgres_user}" >> "${GITHUB_OUTPUT}"
-            echo "postgres_region=${render_postgres_region}" >> "${GITHUB_OUTPUT}"
-            echo "postgres_version=${render_postgres_version}" >> "${GITHUB_OUTPUT}"
 
             {
               echo
-              echo "## Render DBの照合結果"
+              echo "## Render上の既存DB"
               echo
               echo "| 項目 | 値 |"
               echo "| --- | --- |"
-              echo "| バックエンドの \`POSTGRES_DB\` | \`${backend_postgres_db}\` |"
-              echo "| Renderの \`databaseName\` | \`${render_postgres_db}\` |"
+              echo "| \`databaseName\` | \`${render_postgres_db}\` |"
               echo "| RenderのPostgres ID | \`${render_postgres_id}\` |"
-              echo "| 照合結果 | ✅ 一致 |"
             } >> "${GITHUB_STEP_SUMMARY}"
           else
             echo "データベースが存在しませんでした。"
