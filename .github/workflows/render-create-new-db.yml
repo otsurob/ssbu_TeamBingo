@@ -251,11 +251,11 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_OWNER_ID: ${{ vars.RENDER_OWNER_ID }}
-          POSTGRES_NAME: ${{ steps.find_database.outputs.postgres_name || vars.RENDER_POSTGRES_NAME || 'ssbu-team-bingo-db' }}
-          POSTGRES_DATABASE_NAME: ${{ steps.find_database.outputs.backend_postgres_db || vars.RENDER_POSTGRES_DATABASE_NAME || 'ssbu_team_bingo' }}
-          POSTGRES_DATABASE_USER: ${{ steps.find_database.outputs.postgres_user || vars.RENDER_POSTGRES_DATABASE_USER || 'ssbu_team_bingo' }}
-          POSTGRES_REGION: ${{ steps.find_database.outputs.postgres_region || vars.RENDER_POSTGRES_REGION || 'singapore' }}
-          POSTGRES_VERSION: ${{ steps.find_database.outputs.postgres_version || vars.RENDER_POSTGRES_VERSION || '16' }}
+          POSTGRES_NAME: ssbu-team-bingo-db
+          POSTGRES_DATABASE_NAME: ssbu_team_bingo
+          POSTGRES_DATABASE_USER: ssbu_team_bingo_user
+          POSTGRES_REGION: singapore
+          POSTGRES_VERSION: "16"
         run: |
           set -euo pipefail
 
@@ -324,4 +324,149 @@ jobs:
             echo "| PostgreSQLバージョン | \`${POSTGRES_VERSION}\` |"
             echo "| プラン | \`free\` |"
             echo "| 作成結果 | ✅ 成功 |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: 新DBの接続情報でバックエンド環境変数を更新
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+          NEW_POSTGRES_ID: ${{ steps.create_database.outputs.postgres_id }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RENDER_API_KEY:-}" ]; then
+            echo "::error::GitHub Actions SecretのRENDER_API_KEYが未設定です"
+            exit 1
+          fi
+
+          if [ -z "${RENDER_SERVICE_ID:-}" ]; then
+            echo "::error::GitHub Actions VariableのRENDER_SERVICE_IDが未設定です"
+            exit 1
+          fi
+
+          if [ -z "${NEW_POSTGRES_ID:-}" ]; then
+            echo "::error::新しいPostgres IDが取得できませんでした"
+            exit 1
+          fi
+
+          postgres_detail="$(
+            curl \
+              --fail-with-body \
+              --silent \
+              --show-error \
+              --request GET \
+              --url "https://api.render.com/v1/postgres/${NEW_POSTGRES_ID}" \
+              --header "Accept: application/json" \
+              --header "Authorization: Bearer ${RENDER_API_KEY}"
+          )"
+
+          postgres_user="$(jq -r '.databaseUser // empty' <<< "${postgres_detail}")"
+          postgres_db="$(jq -r '.databaseName // empty' <<< "${postgres_detail}")"
+          connection_info=""
+
+          for attempt in $(seq 1 30); do
+            if connection_info="$(
+              curl \
+                --fail \
+                --silent \
+                --show-error \
+                --request GET \
+                --url "https://api.render.com/v1/postgres/${NEW_POSTGRES_ID}/connection-info" \
+                --header "Accept: application/json" \
+                --header "Authorization: Bearer ${RENDER_API_KEY}"
+            )"; then
+              internal_url="$(jq -r '.internalConnectionString // empty' <<< "${connection_info}")"
+              postgres_password="$(jq -r '.password // empty' <<< "${connection_info}")"
+
+              if [ -n "${internal_url}" ] && [ -n "${postgres_password}" ]; then
+                break
+              fi
+            fi
+
+            connection_info=""
+
+            if [ "${attempt}" -eq 30 ]; then
+              echo "::error::新しいPostgresの接続情報を取得できませんでした"
+              exit 1
+            fi
+
+            echo "新しいPostgresの接続情報を待っています: ${attempt}/30"
+            sleep 10
+          done
+
+          echo "::add-mask::${internal_url}"
+          echo "::add-mask::${postgres_password}"
+
+          postgres_host="$(
+            node -e '
+              const url = new URL(process.argv[1]);
+              process.stdout.write(url.hostname);
+            ' "${internal_url}"
+          )"
+
+          postgres_port="$(
+            node -e '
+              const url = new URL(process.argv[1]);
+              process.stdout.write(url.port || "5432");
+            ' "${internal_url}"
+          )"
+
+          if [ -z "${postgres_user}" ] ||
+            [ -z "${postgres_password}" ] ||
+            [ -z "${postgres_host}" ] ||
+            [ -z "${postgres_port}" ] ||
+            [ -z "${postgres_db}" ]; then
+            echo "::error::バックエンドへ設定するDB接続情報が不足しています"
+            exit 1
+          fi
+
+          POSTGRES_USER="${postgres_user}"
+          POSTGRES_PW="${postgres_password}"
+          POSTGRES_HOST="${postgres_host}"
+          POSTGRES_PORT="${postgres_port}"
+          POSTGRES_DB="${postgres_db}"
+
+          env_keys=(
+            POSTGRES_USER
+            POSTGRES_PW
+            POSTGRES_HOST
+            POSTGRES_PORT
+            POSTGRES_DB
+          )
+
+          for key in "${env_keys[@]}"; do
+            value="${!key}"
+
+            request_body="$(
+              jq -n \
+                --arg value "${value}" \
+                '{value: $value}'
+            )"
+
+            curl \
+              --fail-with-body \
+              --silent \
+              --show-error \
+              --request PUT \
+              --url "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/env-vars/${key}" \
+              --header "Accept: application/json" \
+              --header "Authorization: Bearer ${RENDER_API_KEY}" \
+              --header "Content-Type: application/json" \
+              --data "${request_body}" \
+              > /dev/null
+
+            echo "${key}を更新しました"
+          done
+
+          {
+            echo
+            echo "## バックエンド環境変数の更新結果"
+            echo
+            echo "| 環境変数 | 結果 |"
+            echo "| --- | --- |"
+            echo "| \`POSTGRES_USER\` | ✅ 更新 |"
+            echo "| \`POSTGRES_PW\` | ✅ 更新 |"
+            echo "| \`POSTGRES_HOST\` | ✅ 更新 |"
+            echo "| \`POSTGRES_PORT\` | ✅ 更新 |"
+            echo "| \`POSTGRES_DB\` | ✅ 更新 |"
           } >> "${GITHUB_STEP_SUMMARY}"
