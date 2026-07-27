@@ -300,16 +300,36 @@ jobs:
             exit 1
           fi
 
-          postgres_detail="$(
-            curl \
-              --fail-with-body \
-              --silent \
-              --show-error \
-              --request GET \
-              --url "https://api.render.com/v1/postgres/${NEW_POSTGRES_ID}" \
-              --header "Accept: application/json" \
-              --header "Authorization: Bearer ${RENDER_API_KEY}"
-          )"
+          postgres_status=""
+          postgres_detail=""
+
+          for attempt in $(seq 1 60); do
+            postgres_detail="$(
+              curl \
+                --fail-with-body \
+                --silent \
+                --show-error \
+                --request GET \
+                --url "https://api.render.com/v1/postgres/${NEW_POSTGRES_ID}" \
+                --header "Accept: application/json" \
+                --header "Authorization: Bearer ${RENDER_API_KEY}"
+            )"
+
+            postgres_status="$(jq -r '.status // empty' <<< "${postgres_detail}")"
+
+            if [ "${postgres_status}" = "available" ]; then
+              echo "新しいPostgresが利用可能になりました"
+              break
+            fi
+
+            if [ "${attempt}" -eq 60 ]; then
+              echo "::error::新しいPostgresが利用可能になりませんでした: ${postgres_status:-unknown}"
+              exit 1
+            fi
+
+            echo "新しいPostgresの作成完了を待っています: ${postgres_status:-unknown} (${attempt}/60)"
+            sleep 10
+          done
 
           postgres_user="$(jq -r '.databaseUser // empty' <<< "${postgres_detail}")"
           postgres_db="$(jq -r '.databaseName // empty' <<< "${postgres_detail}")"
@@ -449,7 +469,7 @@ jobs:
               --header "Accept: application/json" \
               --header "Authorization: Bearer ${RENDER_API_KEY}" \
               --header "Content-Type: application/json" \
-              --data '{"deployMode":"deploy_only"}'
+              --data '{"deployMode":"build_and_deploy"}'
           )"
 
           deploy_id="$(jq -r '.id // empty' <<< "${deploy_response}")"
@@ -504,6 +524,6 @@ jobs:
             echo "| 項目 | 値 |"
             echo "| --- | --- |"
             echo "| Deploy ID | \`${deploy_id}\` |"
-            echo "| Deployモード | \`deploy_only\` |"
+            echo "| Deployモード | \`build_and_deploy\` |"
             echo "| ステータス | ✅ \`${deploy_status}\` |"
           } >> "${GITHUB_STEP_SUMMARY}"
