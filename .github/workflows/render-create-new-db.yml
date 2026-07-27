@@ -11,9 +11,17 @@ on:
         required: false
         default: Hello from GitHub Actions!
         type: string
+      confirm_delete:
+        description: DBを削除する場合はDELETEと入力
+        required: false
+        type: string
 
 permissions:
   contents: read
+
+concurrency:
+  group: recreate-render-postgres
+  cancel-in-progress: false
 
 jobs:
   actions-demo:
@@ -142,4 +150,45 @@ jobs:
             echo "| Renderの \`databaseName\` | \`${render_postgres_db}\` |"
             echo "| RenderのPostgres ID | \`${render_postgres_id}\` |"
             echo "| 照合結果 | ✅ 一致 |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: 既存のRender PostgreSQLを削除
+        if: >-
+          (github.event_name == 'workflow_dispatch' && inputs.confirm_delete == 'DELETE') ||
+          (github.event_name == 'push' && contains(github.event.head_commit.message, 'test-d2'))
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          POSTGRES_ID: ${{ steps.find_database.outputs.postgres_id }}
+          POSTGRES_DB: ${{ steps.find_database.outputs.postgres_db }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RENDER_API_KEY:-}" ]; then
+            echo "::error::GitHub Actions SecretのRENDER_API_KEYが未設定です"
+            exit 1
+          fi
+
+          echo "削除対象DB: ${POSTGRES_DB}"
+          echo "削除対象ID: ${POSTGRES_ID}"
+
+          curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --request DELETE \
+            --url "https://api.render.com/v1/postgres/${POSTGRES_ID}" \
+            --header "Accept: application/json" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}"
+
+          echo "Render PostgreSQLを削除しました"
+
+          {
+            echo
+            echo "## Render DBの削除結果"
+            echo
+            echo "| 項目 | 値 |"
+            echo "| --- | --- |"
+            echo "| DB名 | \`${POSTGRES_DB}\` |"
+            echo "| Postgres ID | \`${POSTGRES_ID}\` |"
+            echo "| 削除結果 | ✅ 成功 |"
           } >> "${GITHUB_STEP_SUMMARY}"
