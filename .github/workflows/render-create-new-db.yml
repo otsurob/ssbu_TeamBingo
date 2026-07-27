@@ -11,10 +11,6 @@ on:
         required: false
         default: Hello from GitHub Actions!
         type: string
-      confirm_delete:
-        description: DBを削除する場合はDELETEと入力
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -100,6 +96,8 @@ jobs:
             exit 1
           fi
 
+          echo "backend_postgres_db=${backend_postgres_db}" >> "${GITHUB_OUTPUT}"
+
           postgres_list="$(
             curl \
               --fail-with-body \
@@ -113,49 +111,70 @@ jobs:
 
           postgres_count="$(jq 'length' <<< "${postgres_list}")"
 
-          if [ "${postgres_count}" -ne 1 ]; then
-            echo "::error::Render上のPostgresが1個ではありません: ${postgres_count}個"
+          echo "postgres_count=${postgres_count}" >> "${GITHUB_OUTPUT}"
+
+          if [ "${postgres_count}" -gt 1 ]; then
+            echo "::error::Render上のPostgresが複数個あります: ${postgres_count}個"
             exit 1
           fi
 
-          render_postgres_db="$(jq -r '.[0].postgres.databaseName // empty' <<< "${postgres_list}")"
-          render_postgres_id="$(jq -r '.[0].postgres.id // empty' <<< "${postgres_list}")"
+          if [ "${postgres_count}" -eq 1 ]; then
+            render_postgres_db="$(jq -r '.[0].postgres.databaseName // empty' <<< "${postgres_list}")"
+            render_postgres_id="$(jq -r '.[0].postgres.id // empty' <<< "${postgres_list}")"
+            render_postgres_name="$(jq -r '.[0].postgres.name // empty' <<< "${postgres_list}")"
+            render_postgres_user="$(jq -r '.[0].postgres.databaseUser // empty' <<< "${postgres_list}")"
+            render_postgres_region="$(jq -r '.[0].postgres.region // empty' <<< "${postgres_list}")"
+            render_postgres_version="$(jq -r '.[0].postgres.version // empty' <<< "${postgres_list}")"
 
-          if [ -z "${render_postgres_db}" ] || [ -z "${render_postgres_id}" ]; then
-            echo "::error::Render上のPostgres情報を取得できませんでした"
-            exit 1
+            if [ -z "${render_postgres_db}" ] ||
+              [ -z "${render_postgres_id}" ] ||
+              [ -z "${render_postgres_name}" ] ||
+              [ -z "${render_postgres_user}" ] ||
+              [ -z "${render_postgres_region}" ] ||
+              [ -z "${render_postgres_version}" ]; then
+              echo "::error::Render上のPostgres情報を取得できませんでした"
+              exit 1
+            fi
+
+            if [ "${backend_postgres_db}" != "${render_postgres_db}" ]; then
+              echo "::error::バックエンドのPOSTGRES_DBとRender上のDBが一致しません"
+              echo "バックエンド: ${backend_postgres_db}"
+              echo "Render: ${render_postgres_db}"
+              exit 1
+            fi
+
+            echo "バックエンドのPOSTGRES_DB: ${backend_postgres_db}"
+            echo "Render上のdatabaseName: ${render_postgres_db}"
+            echo "一致確認: OK"
+
+            echo "postgres_id=${render_postgres_id}" >> "${GITHUB_OUTPUT}"
+            echo "postgres_db=${render_postgres_db}" >> "${GITHUB_OUTPUT}"
+            echo "postgres_name=${render_postgres_name}" >> "${GITHUB_OUTPUT}"
+            echo "postgres_user=${render_postgres_user}" >> "${GITHUB_OUTPUT}"
+            echo "postgres_region=${render_postgres_region}" >> "${GITHUB_OUTPUT}"
+            echo "postgres_version=${render_postgres_version}" >> "${GITHUB_OUTPUT}"
+
+            {
+              echo
+              echo "## Render DBの照合結果"
+              echo
+              echo "| 項目 | 値 |"
+              echo "| --- | --- |"
+              echo "| バックエンドの \`POSTGRES_DB\` | \`${backend_postgres_db}\` |"
+              echo "| Renderの \`databaseName\` | \`${render_postgres_db}\` |"
+              echo "| RenderのPostgres ID | \`${render_postgres_id}\` |"
+              echo "| 照合結果 | ✅ 一致 |"
+            } >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "データベースが存在しませんでした。"
+
+            {
+              echo "データベースが存在しませんでした"
+            } >> "${GITHUB_STEP_SUMMARY}"
           fi
-
-          if [ "${backend_postgres_db}" != "${render_postgres_db}" ]; then
-            echo "::error::バックエンドのPOSTGRES_DBとRender上のDBが一致しません"
-            echo "バックエンド: ${backend_postgres_db}"
-            echo "Render: ${render_postgres_db}"
-            exit 1
-          fi
-
-          echo "バックエンドのPOSTGRES_DB: ${backend_postgres_db}"
-          echo "Render上のdatabaseName: ${render_postgres_db}"
-          echo "一致確認: OK"
-
-          echo "postgres_id=${render_postgres_id}" >> "${GITHUB_OUTPUT}"
-          echo "postgres_db=${render_postgres_db}" >> "${GITHUB_OUTPUT}"
-
-          {
-            echo
-            echo "## Render DBの照合結果"
-            echo
-            echo "| 項目 | 値 |"
-            echo "| --- | --- |"
-            echo "| バックエンドの \`POSTGRES_DB\` | \`${backend_postgres_db}\` |"
-            echo "| Renderの \`databaseName\` | \`${render_postgres_db}\` |"
-            echo "| RenderのPostgres ID | \`${render_postgres_id}\` |"
-            echo "| 照合結果 | ✅ 一致 |"
-          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: 既存のRender PostgreSQLを削除
-        if: >-
-          (github.event_name == 'workflow_dispatch' && inputs.confirm_delete == 'DELETE') ||
-          (github.event_name == 'push' && contains(github.event.head_commit.message, 'test-d2'))
+        if: steps.find_database.outputs.postgres_count == '1'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           POSTGRES_ID: ${{ steps.find_database.outputs.postgres_id }}
@@ -191,4 +210,118 @@ jobs:
             echo "| DB名 | \`${POSTGRES_DB}\` |"
             echo "| Postgres ID | \`${POSTGRES_ID}\` |"
             echo "| 削除結果 | ✅ 成功 |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: 既存DBの削除完了を待機
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 30); do
+            postgres_list="$(
+              curl \
+                --fail-with-body \
+                --silent \
+                --show-error \
+                --request GET \
+                --url "https://api.render.com/v1/postgres?limit=100" \
+                --header "Accept: application/json" \
+                --header "Authorization: Bearer ${RENDER_API_KEY}"
+            )"
+
+            postgres_count="$(jq 'length' <<< "${postgres_list}")"
+
+            if [ "${postgres_count}" -eq 0 ]; then
+              echo "新しいPostgresを作成できる状態になりました"
+              break
+            fi
+
+            if [ "${attempt}" -eq 30 ]; then
+              echo "::error::既存Postgresの削除完了を確認できませんでした"
+              exit 1
+            fi
+
+            echo "既存Postgresの削除完了を待っています: ${attempt}/30"
+            sleep 10
+          done
+
+      - name: 新しいRender PostgreSQLを作成
+        id: create_database
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_OWNER_ID: ${{ vars.RENDER_OWNER_ID }}
+          POSTGRES_NAME: ${{ steps.find_database.outputs.postgres_name || vars.RENDER_POSTGRES_NAME || 'ssbu-team-bingo-db' }}
+          POSTGRES_DATABASE_NAME: ${{ steps.find_database.outputs.backend_postgres_db || vars.RENDER_POSTGRES_DATABASE_NAME || 'ssbu_team_bingo' }}
+          POSTGRES_DATABASE_USER: ${{ steps.find_database.outputs.postgres_user || vars.RENDER_POSTGRES_DATABASE_USER || 'ssbu_team_bingo' }}
+          POSTGRES_REGION: ${{ steps.find_database.outputs.postgres_region || vars.RENDER_POSTGRES_REGION || 'singapore' }}
+          POSTGRES_VERSION: ${{ steps.find_database.outputs.postgres_version || vars.RENDER_POSTGRES_VERSION || '16' }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RENDER_API_KEY:-}" ]; then
+            echo "::error::GitHub Actions SecretのRENDER_API_KEYが未設定です"
+            exit 1
+          fi
+
+          if [ -z "${RENDER_OWNER_ID:-}" ]; then
+            echo "::error::GitHub Actions VariableのRENDER_OWNER_IDが未設定です"
+            exit 1
+          fi
+
+          request_body="$(
+            jq -n \
+              --arg name "${POSTGRES_NAME}" \
+              --arg owner_id "${RENDER_OWNER_ID}" \
+              --arg database_name "${POSTGRES_DATABASE_NAME}" \
+              --arg database_user "${POSTGRES_DATABASE_USER}" \
+              --arg region "${POSTGRES_REGION}" \
+              --arg version "${POSTGRES_VERSION}" \
+              '{
+                name: $name,
+                ownerId: $owner_id,
+                databaseName: $database_name,
+                databaseUser: $database_user,
+                plan: "free",
+                region: $region,
+                version: $version
+              }'
+          )"
+
+          create_response="$(
+            curl \
+              --fail-with-body \
+              --silent \
+              --show-error \
+              --request POST \
+              --url "https://api.render.com/v1/postgres" \
+              --header "Accept: application/json" \
+              --header "Authorization: Bearer ${RENDER_API_KEY}" \
+              --header "Content-Type: application/json" \
+              --data "${request_body}"
+          )"
+
+          new_postgres_id="$(jq -r '.id // empty' <<< "${create_response}")"
+
+          if [ -z "${new_postgres_id}" ]; then
+            echo "::error::新しいPostgresのIDを取得できませんでした"
+            exit 1
+          fi
+
+          echo "postgres_id=${new_postgres_id}" >> "${GITHUB_OUTPUT}"
+          echo "新しいRender PostgreSQLを作成しました: ${new_postgres_id}"
+
+          {
+            echo
+            echo "## Render DBの作成結果"
+            echo
+            echo "| 項目 | 値 |"
+            echo "| --- | --- |"
+            echo "| Render上の名前 | \`${POSTGRES_NAME}\` |"
+            echo "| DB名 | \`${POSTGRES_DATABASE_NAME}\` |"
+            echo "| Postgres ID | \`${new_postgres_id}\` |"
+            echo "| リージョン | \`${POSTGRES_REGION}\` |"
+            echo "| PostgreSQLバージョン | \`${POSTGRES_VERSION}\` |"
+            echo "| プラン | \`free\` |"
+            echo "| 作成結果 | ✅ 成功 |"
           } >> "${GITHUB_STEP_SUMMARY}"
