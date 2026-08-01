@@ -54,10 +54,15 @@ jobs:
             echo "次は、このWorkflowにRender APIの読み取り確認を追加できます。"
           } >> "${GITHUB_STEP_SUMMARY}"
 
-  recreate-database:
-    name: Render PostgreSQLを削除→再生成
+  inspect_database:
+    name: 既存DB確認
     needs: actions-demo
     runs-on: ubuntu-latest
+
+    outputs:
+      postgres_count: ${{ steps.find_database.outputs.postgres_count }}
+      postgres_id: ${{ steps.find_database.outputs.postgres_id }}
+      postgres_db: ${{ steps.find_database.outputs.postgres_db }}
 
     steps:
       - name: Render上の既存DBを確認
@@ -124,12 +129,18 @@ jobs:
             } >> "${GITHUB_STEP_SUMMARY}"
           fi
 
+  delete_database:
+    name: 既存DB削除
+    needs: inspect_database
+    runs-on: ubuntu-latest
+
+    steps:
       - name: 既存のRender PostgreSQLを削除
-        if: steps.find_database.outputs.postgres_count == '1'
+        if: needs.inspect_database.outputs.postgres_count == '1'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          POSTGRES_ID: ${{ steps.find_database.outputs.postgres_id }}
-          POSTGRES_DB: ${{ steps.find_database.outputs.postgres_db }}
+          POSTGRES_ID: ${{ needs.inspect_database.outputs.postgres_id }}
+          POSTGRES_DB: ${{ needs.inspect_database.outputs.postgres_db }}
         run: |
           set -euo pipefail
 
@@ -163,6 +174,27 @@ jobs:
             echo "| 削除結果 | ✅ 成功 |"
           } >> "${GITHUB_STEP_SUMMARY}"
 
+      - name: 既存DB削除をスキップ
+        if: needs.inspect_database.outputs.postgres_count == '0'
+        run: |
+          echo "既存DBがないため削除をスキップしました"
+
+          {
+            echo
+            echo "## Render DBの削除結果"
+            echo
+            echo "既存DBがないため削除をスキップしました。"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  create_database:
+    name: 新DB作成
+    needs: delete_database
+    runs-on: ubuntu-latest
+
+    outputs:
+      postgres_id: ${{ steps.create_database.outputs.postgres_id }}
+
+    steps:
       - name: 既存DBの削除完了を待機
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
@@ -277,11 +309,17 @@ jobs:
             echo "| 作成結果 | ✅ 成功 |"
           } >> "${GITHUB_STEP_SUMMARY}"
 
+  update_backend_env:
+    name: バックエンド環境変数更新
+    needs: create_database
+    runs-on: ubuntu-latest
+
+    steps:
       - name: 新DBの接続情報でバックエンド環境変数を更新
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
-          NEW_POSTGRES_ID: ${{ steps.create_database.outputs.postgres_id }}
+          NEW_POSTGRES_ID: ${{ needs.create_database.outputs.postgres_id }}
         run: |
           set -euo pipefail
 
@@ -442,6 +480,12 @@ jobs:
             echo "| \`POSTGRES_DB\` | ✅ 更新 |"
           } >> "${GITHUB_STEP_SUMMARY}"
 
+  deploy_backend:
+    name: バックエンド再デプロイ
+    needs: update_backend_env
+    runs-on: ubuntu-latest
+
+    steps:
       - name: バックエンドを再デプロイ
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
