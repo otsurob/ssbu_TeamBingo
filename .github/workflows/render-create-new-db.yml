@@ -1,9 +1,6 @@
 name: GitHub Actions 動作確認
 
 on:
-  push:
-    branches:
-      - 20260726/github-actions
   workflow_dispatch:
     inputs:
       message:
@@ -11,6 +8,9 @@ on:
         required: false
         default: Hello from GitHub Actions!
         type: string
+  schedule:
+    - cron: "0 10 * * 0"
+      timezone: "Asia/Tokyo"
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: 実行情報をログに表示
         env:
-          INPUT_MESSAGE: ${{ inputs.message || '作業ブランチへのpushで起動しました' }}
+          INPUT_MESSAGE: ${{ inputs.message || '定期スケジュールで起動しました' }}
         run: |
           echo "GitHub Actionsが正常に起動しました"
           echo "メッセージ: ${INPUT_MESSAGE}"
@@ -39,7 +39,7 @@ jobs:
 
       - name: Job Summaryを作成
         env:
-          INPUT_MESSAGE: ${{ inputs.message || '作業ブランチへのpushで起動しました' }}
+          INPUT_MESSAGE: ${{ inputs.message || '定期スケジュールで起動しました' }}
         run: |
           {
             echo "# ✅ GitHub Actions 動作確認成功"
@@ -63,6 +63,7 @@ jobs:
       postgres_count: ${{ steps.find_database.outputs.postgres_count }}
       postgres_id: ${{ steps.find_database.outputs.postgres_id }}
       postgres_db: ${{ steps.find_database.outputs.postgres_db }}
+      should_recreate: ${{ steps.find_database.outputs.should_recreate }}
 
     steps:
       - name: Render上の既存DBを確認
@@ -100,6 +101,7 @@ jobs:
           if [ "${postgres_count}" -eq 1 ]; then
             render_postgres_db="$(jq -r '.[0].postgres.databaseName // empty' <<< "${postgres_list}")"
             render_postgres_id="$(jq -r '.[0].postgres.id // empty' <<< "${postgres_list}")"
+            render_postgres_expires_at="$(jq -r '.[0].postgres.expiresAt // empty' <<< "${postgres_list}")"
 
             if [ -z "${render_postgres_db}" ] || [ -z "${render_postgres_id}" ]; then
               echo "::error::Render上のPostgres情報を取得できませんでした"
@@ -112,6 +114,32 @@ jobs:
             echo "postgres_id=${render_postgres_id}" >> "${GITHUB_OUTPUT}"
             echo "postgres_db=${render_postgres_db}" >> "${GITHUB_OUTPUT}"
 
+            if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+              should_recreate="true"
+              recreate_reason="手動実行"
+            else
+              if [ -z "${render_postgres_expires_at}" ]; then
+                echo "::error::PostgresのexpiresAtを取得できませんでした"
+                exit 1
+              fi
+
+              expires_at_epoch="$(date -d "${render_postgres_expires_at}" +%s)"
+              current_epoch="$(date -u +%s)"
+              remaining_seconds="$((expires_at_epoch - current_epoch))"
+              remaining_days="$(((remaining_seconds + 86399) / 86400))"
+
+              if [ "${remaining_seconds}" -le 432000 ]; then
+                should_recreate="true"
+                recreate_reason="有効期限まで${remaining_days}日"
+              else
+                should_recreate="false"
+                recreate_reason="有効期限まで${remaining_days}日あるため見送り"
+              fi
+            fi
+
+            echo "should_recreate=${should_recreate}" >> "${GITHUB_OUTPUT}"
+            echo "再作成判定: ${recreate_reason}"
+
             {
               echo
               echo "## Render上の既存DB"
@@ -120,9 +148,12 @@ jobs:
               echo "| --- | --- |"
               echo "| \`databaseName\` | \`${render_postgres_db}\` |"
               echo "| RenderのPostgres ID | \`${render_postgres_id}\` |"
+              echo "| 有効期限 | \`${render_postgres_expires_at:-未取得}\` |"
+              echo "| 再作成判定 | \`${should_recreate}\`（${recreate_reason}） |"
             } >> "${GITHUB_STEP_SUMMARY}"
           else
             echo "データベースが存在しませんでした。"
+            echo "should_recreate=true" >> "${GITHUB_OUTPUT}"
 
             {
               echo "データベースが存在しませんでした"
@@ -136,7 +167,9 @@ jobs:
 
     steps:
       - name: 既存のRender PostgreSQLを削除
-        if: needs.inspect_database.outputs.postgres_count == '1'
+        if: >-
+          needs.inspect_database.outputs.should_recreate == 'true' &&
+          needs.inspect_database.outputs.postgres_count == '1'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           POSTGRES_ID: ${{ needs.inspect_database.outputs.postgres_id }}
@@ -175,7 +208,9 @@ jobs:
           } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: 既存DB削除をスキップ
-        if: needs.inspect_database.outputs.postgres_count == '0'
+        if: >-
+          needs.inspect_database.outputs.should_recreate == 'true' &&
+          needs.inspect_database.outputs.postgres_count == '0'
         run: |
           echo "既存DBがないため削除をスキップしました"
 
@@ -186,9 +221,16 @@ jobs:
             echo "既存DBがないため削除をスキップしました。"
           } >> "${GITHUB_STEP_SUMMARY}"
 
+      - name: 今回のDB再作成を見送る
+        if: needs.inspect_database.outputs.should_recreate != 'true'
+        run: |
+          echo "有効期限まで余裕があるため、DB再作成を見送ります"
+
   create_database:
     name: 新DB作成
-    needs: delete_database
+    needs:
+      - inspect_database
+      - delete_database
     runs-on: ubuntu-latest
 
     outputs:
@@ -196,6 +238,7 @@ jobs:
 
     steps:
       - name: 既存DBの削除完了を待機
+        if: needs.inspect_database.outputs.should_recreate == 'true'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
@@ -231,6 +274,7 @@ jobs:
 
       - name: 新しいRender PostgreSQLを作成
         id: create_database
+        if: needs.inspect_database.outputs.should_recreate == 'true'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_OWNER_ID: ${{ vars.RENDER_OWNER_ID }}
@@ -309,13 +353,21 @@ jobs:
             echo "| 作成結果 | ✅ 成功 |"
           } >> "${GITHUB_STEP_SUMMARY}"
 
+      - name: 新DB作成をスキップ
+        if: needs.inspect_database.outputs.should_recreate != 'true'
+        run: |
+          echo "再作成条件を満たしていないため、新DB作成をスキップしました"
+
   update_backend_env:
     name: バックエンド環境変数更新
-    needs: create_database
+    needs:
+      - inspect_database
+      - create_database
     runs-on: ubuntu-latest
 
     steps:
       - name: 新DBの接続情報でバックエンド環境変数を更新
+        if: needs.inspect_database.outputs.should_recreate == 'true'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
@@ -480,13 +532,21 @@ jobs:
             echo "| \`POSTGRES_DB\` | ✅ 更新 |"
           } >> "${GITHUB_STEP_SUMMARY}"
 
+      - name: 環境変数更新をスキップ
+        if: needs.inspect_database.outputs.should_recreate != 'true'
+        run: |
+          echo "DBを再作成していないため、環境変数更新をスキップしました"
+
   deploy_backend:
     name: バックエンド再デプロイ
-    needs: update_backend_env
+    needs:
+      - inspect_database
+      - update_backend_env
     runs-on: ubuntu-latest
 
     steps:
       - name: バックエンドを再デプロイ
+        if: needs.inspect_database.outputs.should_recreate == 'true'
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
@@ -571,3 +631,8 @@ jobs:
             echo "| Deployモード | \`build_and_deploy\` |"
             echo "| ステータス | ✅ \`${deploy_status}\` |"
           } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: 再デプロイをスキップ
+        if: needs.inspect_database.outputs.should_recreate != 'true'
+        run: |
+          echo "DBを再作成していないため、バックエンド再デプロイをスキップしました"
