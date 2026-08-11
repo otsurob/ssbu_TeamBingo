@@ -12,7 +12,7 @@ const Form = () => {
       showError('名前を入力してください');
       return;
     }
-    if (name.length > 20) {
+    if (name.length > 100) {
       showError('名前が長すぎます！');
       return;
     }

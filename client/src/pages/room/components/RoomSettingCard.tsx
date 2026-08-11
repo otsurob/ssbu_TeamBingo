@@ -56,7 +56,7 @@ const RoomSettingCard = ({
               gap={2}
               key={p.id}
             >
-              <NameBar name={p.name} myName={me?.name} />
+              <NameBar name={p.name} myName={me?.name} truncateAt={20} />
               <AlertDialog
                 trigger={<DeleteButton />}
                 title="プレイヤーを削除しますか？"

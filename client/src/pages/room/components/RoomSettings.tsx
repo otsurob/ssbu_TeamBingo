@@ -45,7 +45,7 @@ const RoomSettings = ({ players }: RoomSettingsProps) => {
                     gap={3}
                     key={p.id}
                   >
-                    <NameBar name={p.name} />
+                    <NameBar name={p.name} truncateAt={20} />
                     <DeleteButton onClick={handleDeletePlayer} />
                   </Container>
                 ))}

@@ -39,7 +39,7 @@ const TeamArea = ({ teamNum, playerNames, me }: TeamAreaProps) => {
       <Card.Body backgroundColor={playerColor} gap={3}>
         <Stack>
           {playerNames.map((p) => (
-            <NameBar name={p} myName={me?.name} key={p} />
+            <NameBar name={p} myName={me?.name} truncateAt={20} key={p} />
           ))}
         </Stack>
       </Card.Body>

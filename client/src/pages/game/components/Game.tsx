@@ -97,9 +97,9 @@ const GameBoard = ({
           />
           <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
             {team1Players?.map((player) => (
-              <Center w="250px" h="30px" key={player.id} padding="30px">
+              <Center w="250px" key={player.id} padding="30px">
                 {/* <Text fontSize="3xl">{player.name}</Text> */}
-                <NameBar name={player.name} myName={me?.name} />
+                <NameBar name={player.name} myName={me?.name} wrapAt={20} />
               </Center>
             ))}
           </Flex>
@@ -132,9 +132,9 @@ const GameBoard = ({
           />
           <Flex flexWrap="wrap" w="500px" flexDirection="row" marginTop="15px">
             {team2Players?.map((player) => (
-              <Center w="250px" h="30px" key={player.id} padding="30px">
+              <Center w="250px" key={player.id} padding="30px">
                 {/* <Text fontSize="3xl">{player.name}</Text> */}
-                <NameBar name={player.name} myName={me?.name} />
+                <NameBar name={player.name} myName={me?.name} wrapAt={20} />
               </Center>
             ))}
           </Flex>
@@ -154,9 +154,9 @@ const GameBoard = ({
     >
       <Flex flexWrap="wrap" w="350px" flexDirection="row" mb={4}>
         {team1Players?.map((player) => (
-          <Center w="175px" h="10px" key={player.id} padding="15px">
+          <Center w="175px" key={player.id} padding="15px">
             {/* <Text fontSize="md">{player.name}</Text> */}
-            <NameBar name={player.name} myName={me?.name} />
+            <NameBar name={player.name} myName={me?.name} wrapAt={20} />
           </Center>
         ))}
       </Flex>
@@ -196,9 +196,9 @@ const GameBoard = ({
       <Spacer />
       <Flex flexWrap="wrap" w="350px" flexDirection="row" marginTop="5px">
         {team2Players?.map((player) => (
-          <Center w="175px" h="10px" key={player.id} padding="15px">
+          <Center w="175px" key={player.id} padding="15px">
             {/* <Text fontSize="md">{player.name}</Text> */}
-            <NameBar name={player.name} myName={me?.name} />
+            <NameBar name={player.name} myName={me?.name} wrapAt={20} />
           </Center>
         ))}
       </Flex>
