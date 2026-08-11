@@ -35,7 +35,7 @@ const SpectatorArea = ({ me, spectatorNames }: SpectatorAreaProps) => {
       <Card.Body backgroundColor="green.200">
         <Stack>
           {spectatorNames.map((p) => (
-            <NameBar name={p} myName={me?.name} key={p} />
+            <NameBar name={p} myName={me?.name} truncateAt={20} key={p} />
           ))}
         </Stack>
       </Card.Body>
