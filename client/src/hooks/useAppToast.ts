@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { toaster } from '../components/ui/toaster';
 
 type ToastType = 'info' | 'success' | 'warning' | 'error' | 'loading';
@@ -20,20 +21,27 @@ type ToastOptions = {
  * Provides a single entry point to show toasts with sensible defaults.
  */
 export const useAppToast = () => {
-  const showToast = (options: ToastOptions) => {
+  const showToast = useCallback((options: ToastOptions) => {
     toaster.create({
       closable: true,
       duration: 4000,
       type: 'error',
       ...options,
     });
-  };
+  }, []);
 
-  const showError = (title: string, description?: string) =>
-    showToast({ title, description, type: 'error' });
+  const showError = useCallback(
+    (title: string, description?: string) => showToast({ title, description, type: 'error' }),
+    [showToast],
+  );
 
-  const showSuccess = (title: string, description?: string) =>
-    showToast({ title, description, type: 'success' });
+  const showSuccess = useCallback(
+    (title: string, description?: string) => showToast({ title, description, type: 'success' }),
+    [showToast],
+  );
 
-  return { showToast, showError, showSuccess };
+  return useMemo(
+    () => ({ showToast, showError, showSuccess }),
+    [showToast, showError, showSuccess],
+  );
 };
