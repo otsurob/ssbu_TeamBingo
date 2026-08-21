@@ -1,4 +1,4 @@
-name: GitHub Actions 動作確認
+name: GitHub Actions renderDB自動際作成
 
 on:
   workflow_dispatch:
