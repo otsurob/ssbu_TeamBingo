@@ -1,7 +1,9 @@
-import { Button, Card, CardBody, Center, Container, Field, Input } from '@chakra-ui/react';
+import { Button, Card, CardBody, Center, Container, Field, Text, Textarea } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppToast } from '../../../hooks/useAppToast';
+
+const MAX_NAME_LENGTH = 100;
 
 const Form = () => {
   const [name, setName] = useState<string>('');
@@ -12,7 +14,7 @@ const Form = () => {
       showError('名前を入力してください');
       return;
     }
-    if (name.length > 100) {
+    if (name.length > MAX_NAME_LENGTH) {
       showError('名前が長すぎます！');
       return;
     }
@@ -24,7 +26,24 @@ const Form = () => {
         <CardBody>
           <Field.Root>
             <Field.Label>名前</Field.Label>
-            <Input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            <Textarea
+              autoresize
+              rows={1}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                }
+              }}
+            />
+            <Text
+              alignSelf="flex-end"
+              color={name.length > MAX_NAME_LENGTH ? 'red.500' : 'fg.muted'}
+              fontSize="sm"
+            >
+              {name.length} / {MAX_NAME_LENGTH}文字
+            </Text>
           </Field.Root>
           <Center mt={8}>
             <Button marginRight={70} colorScheme="teal" size="lg" onClick={resister}>
