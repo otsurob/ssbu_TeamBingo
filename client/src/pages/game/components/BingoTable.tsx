@@ -1,5 +1,5 @@
 import { Flex, IconButton, Image } from '@chakra-ui/react';
-import { NON_GOT_CELL } from '../../../constants/constants';
+import { NON_GOT_CELL } from '../constants';
 import type { ResponseBingo } from '../../../types/restAPIResponse';
 import AlertDialog from '../../../components/AlertDialog';
 

@@ -1,4 +1,4 @@
-import { WS_URL } from '../constants/constants';
+import { WS_URL } from '../config/env';
 import type { wsEventType } from '../types/websocketEvent';
 
 type RoomWebSocketHandlers = {
