@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL } from '../constants/constants';
+import { API_URL } from '../config/env';
 import type { CellResponse, ResponseBingo } from '../types/restAPIResponse';
 
 export const fetchBingos = async (room: string) => {
