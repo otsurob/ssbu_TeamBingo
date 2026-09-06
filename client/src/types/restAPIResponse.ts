@@ -35,3 +35,9 @@ export type ResponseRoom = {
   id: number;
   room_name: string;
 };
+
+export type RoomCharacterSetting = {
+  team: number;
+  include: number[];
+  exclude: number[];
+};

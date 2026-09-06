@@ -5,6 +5,7 @@ import { createBingo } from '../../../api/bingoAPIs';
 import { dividePlayers } from '../../../api/playerAPIs';
 import { useAppToast } from '../../../hooks/useAppToast';
 import { SettingButton } from '../../../components/CustomButton';
+import CharacterSettingDialog from './CharacterSettingDialog';
 
 type RoomCardProps = {
   name: string;
@@ -53,6 +54,7 @@ const RoomCard = ({ name, onToggleRoomSetting }: RoomCardProps) => {
         {/* <RoomSettings players={players} /> */}
       </CardHeader>
       <CardBody gap="5">
+        <CharacterSettingDialog room={room} />
         <Button onClick={startGame}>ゲーム開始</Button>
         <Button onClick={randomTeam}>ランダムチーム振り分け</Button>
         {/* <TeamSelection
