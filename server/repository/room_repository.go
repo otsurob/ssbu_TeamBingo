@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"server/domain"
 
@@ -8,10 +9,13 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+var ErrRoomCharacterSettingNotFound = errors.New("room character setting does not exist")
+
 type IRoomRepository interface {
 	GetRoom(room *domain.Room, roomName string) error
 	GetAllRooms(rooms *[]domain.Room) error
 	CreateRoom(room *domain.Room) error
+	CreateRoomCharacterSettings(settings []domain.RoomCharacterSetting) error
 	DeleteRoom(roomName string) error
 	GetPlayer(plauers *domain.Player, roomName string, name string) error
 	GetPlayers(players *[]domain.Player, roomName string) error
@@ -19,6 +23,8 @@ type IRoomRepository interface {
 	UpdatePlayer(player *domain.Player, roomName string, name string) error
 	DeletePlayer(roomName string) error
 	DeleteOnePlayer(roomName string, name string) error
+	GetRoomCharacterSettings(settings *[]domain.RoomCharacterSetting, roomID uint) error
+	UpdateRoomCharacterSetting(setting *domain.RoomCharacterSetting) error
 }
 
 type roomRepository struct {
@@ -46,6 +52,64 @@ func (rr *roomRepository) GetAllRooms(rooms *[]domain.Room) error {
 func (rr *roomRepository) CreateRoom(room *domain.Room) error {
 	if err := rr.db.Create(room).Error; err != nil {
 		return err
+	}
+	return nil
+}
+
+func (rr *roomRepository) CreateRoomCharacterSettings(
+	settings []domain.RoomCharacterSetting,
+) error {
+	for i := range settings {
+		if settings[i].Include == nil {
+			settings[i].Include = []uint{}
+		}
+		if settings[i].Exclude == nil {
+			settings[i].Exclude = []uint{}
+		}
+	}
+
+	return rr.db.Create(&settings).Error
+}
+
+func (rr *roomRepository) GetRoomCharacterSettings(
+	settings *[]domain.RoomCharacterSetting,
+	roomID uint,
+) error {
+	if err := rr.db.
+		Where("room_id = ?", roomID).
+		Order("team").
+		Find(settings).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rr *roomRepository) UpdateRoomCharacterSetting(
+	setting *domain.RoomCharacterSetting,
+) error {
+	// JSON serializer を確実に通すため、構造体で更新する。
+	// room_id と team は検索条件に使い、更新対象は設定配列だけに限定する。
+	updates := &domain.RoomCharacterSetting{
+		Include: setting.Include,
+		Exclude: setting.Exclude,
+	}
+	if updates.Include == nil {
+		updates.Include = []uint{}
+	}
+	if updates.Exclude == nil {
+		updates.Exclude = []uint{}
+	}
+
+	result := rr.db.
+		Model(&domain.RoomCharacterSetting{}).
+		Where("room_id = ? AND team = ?", setting.RoomID, setting.Team).
+		Select("include", "exclude").
+		Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected < 1 {
+		return ErrRoomCharacterSettingNotFound
 	}
 	return nil
 }

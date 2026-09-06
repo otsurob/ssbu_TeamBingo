@@ -2,6 +2,7 @@
 package usecase
 
 import (
+	"fmt"
 	"server/domain"
 	"server/repository"
 )
@@ -77,8 +78,24 @@ func (bu *bingoUsecase) CreateBingos(bingo domain.Bingo) ([]domain.BingoResponse
 		if err := rr.GetRoom(&room, bingo.RoomName); err != nil {
 			return err
 		}
+		settings := []domain.RoomCharacterSetting{}
+		if err := rr.GetRoomCharacterSettings(&settings, room.ID); err != nil {
+			return err
+		}
+		settingsByTeam := make(map[domain.Team]domain.RoomCharacterSetting, len(settings))
+		for _, setting := range settings {
+			settingsByTeam[setting.Team] = setting
+		}
+
 		for _, team := range Team {
-			characterNumber := domain.RandomBingoGenerator()
+			setting, ok := settingsByTeam[team]
+			if !ok {
+				return fmt.Errorf("room character setting does not exist for team %d", team)
+			}
+			characterNumber := domain.RandomBingoGenerator(setting.Include, setting.Exclude)
+			if len(characterNumber) != domain.BINGO_SIZE {
+				return fmt.Errorf("cannot generate a bingo for team %d with the current character settings", team)
+			}
 
 			newBingo := domain.Bingo{
 				RoomName: bingo.RoomName,

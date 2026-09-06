@@ -13,6 +13,8 @@ type IRoomController interface {
 	GetAllRooms(c echo.Context) error
 	GetRoom(c echo.Context) error
 	CreateRoom(c echo.Context) error
+	GetRoomCharacterSettings(c echo.Context) error
+	UpdateRoomCharacterSetting(c echo.Context) error
 	DeleteRoom(c echo.Context) error
 	CheckRoomPassword(c echo.Context) error
 	GetPlayer(c echo.Context) error
@@ -26,6 +28,18 @@ type IRoomController interface {
 
 type roomController struct {
 	ru usecase.IRoomUsecase
+}
+
+type updateRoomCharacterSettingRequest struct {
+	Team    *domain.Team `json:"team"`
+	Include []uint       `json:"include"`
+	Exclude []uint       `json:"exclude"`
+}
+
+type roomCharacterSettingResponse struct {
+	Team    domain.Team `json:"team"`
+	Include []uint      `json:"include"`
+	Exclude []uint      `json:"exclude"`
 }
 
 func NewRoomController(ru usecase.IRoomUsecase) IRoomController {
@@ -62,6 +76,66 @@ func (rc *roomController) CreateRoom(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, roomRes)
+}
+
+func (rc *roomController) GetRoomCharacterSettings(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	settings, err := rc.ru.GetRoomCharacterSettings(roomName)
+	if err != nil {
+		if errors.Is(err, usecase.ErrRoomNotFound) {
+			return c.JSON(http.StatusNotFound, err.Error())
+		}
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	responses := make([]roomCharacterSettingResponse, 0, len(settings))
+	for _, setting := range settings {
+		include := setting.Include
+		if include == nil {
+			include = []uint{}
+		}
+		exclude := setting.Exclude
+		if exclude == nil {
+			exclude = []uint{}
+		}
+		responses = append(responses, roomCharacterSettingResponse{
+			Team:    setting.Team,
+			Include: include,
+			Exclude: exclude,
+		})
+	}
+
+	return c.JSON(http.StatusOK, responses)
+}
+
+func (rc *roomController) UpdateRoomCharacterSetting(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	request := updateRoomCharacterSettingRequest{}
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if request.Team == nil || request.Include == nil || request.Exclude == nil {
+		return c.JSON(http.StatusBadRequest, "team, include, and exclude are required")
+	}
+
+	setting := domain.RoomCharacterSetting{
+		Team:    *request.Team,
+		Include: request.Include,
+		Exclude: request.Exclude,
+	}
+	if err := rc.ru.UpdateRoomCharacterSetting(setting, roomName); err != nil {
+		switch {
+		case errors.Is(err, usecase.ErrInvalidTeam):
+			return c.JSON(http.StatusBadRequest, err.Error())
+		case errors.Is(err, usecase.ErrRoomNotFound),
+			errors.Is(err, usecase.ErrRoomCharacterSettingNotFound):
+			return c.JSON(http.StatusNotFound, err.Error())
+		default:
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (rc *roomController) DeleteRoom(c echo.Context) error {

@@ -11,5 +11,11 @@ func main() {
 	defer fmt.Println("Successfully Migrated")
 	defer db.CloseDB(dbConn)
 	//引数にはデータベースに反映させたいモデル構造を渡す
-	dbConn.AutoMigrate(&domain.Room{}, &domain.Player{}, &domain.Bingo{}, &domain.Cell{})
+	dbConn.AutoMigrate(
+		&domain.Room{},
+		&domain.Player{},
+		&domain.Bingo{},
+		&domain.Cell{},
+		&domain.RoomCharacterSetting{},
+	)
 }

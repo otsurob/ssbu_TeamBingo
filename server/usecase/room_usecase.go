@@ -7,14 +7,19 @@ import (
 )
 
 var (
-	ErrRoomAlreadyExists   = errors.New("room already exists")
-	ErrPlayerAlreadyExists = errors.New("player already exists in the room")
+	ErrRoomAlreadyExists            = errors.New("room already exists")
+	ErrRoomNotFound                 = errors.New("room does not exist")
+	ErrRoomCharacterSettingNotFound = errors.New("room character setting does not exist")
+	ErrPlayerAlreadyExists          = errors.New("player already exists in the room")
+	ErrInvalidTeam                  = errors.New("invalid team")
 )
 
 type IRoomUsecase interface {
 	GetAllRooms() ([]domain.RoomResponse, error)
 	GetRoom(roomName string) (domain.RoomResponse, error)
 	CreateRoom(room domain.Room) (domain.RoomResponse, error)
+	GetRoomCharacterSettings(roomName string) ([]domain.RoomCharacterSetting, error)
+	UpdateRoomCharacterSetting(setting domain.RoomCharacterSetting, roomName string) error
 	DeleteRoom(roomName string) error
 	CheckRoomPassword(roomName string, password string) (bool, error)
 	GetPlayer(roomName string, name string) (domain.PlayerResponse, error)
@@ -76,7 +81,29 @@ func (ru *roomUsecase) CreateRoom(room domain.Room) (domain.RoomResponse, error)
 		return domain.RoomResponse{}, ErrRoomAlreadyExists
 	}
 
-	if err := ru.rr.CreateRoom(&room); err != nil {
+	// ルームと2チーム分のキャラクター設定を同じトランザクションで作成する。
+	err := ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
+		if err := rr.CreateRoom(&room); err != nil {
+			return err
+		}
+
+		settings := []domain.RoomCharacterSetting{
+			{
+				RoomID:  room.ID,
+				Team:    domain.TeamA,
+				Include: []uint{},
+				Exclude: []uint{},
+			},
+			{
+				RoomID:  room.ID,
+				Team:    domain.TeamB,
+				Include: []uint{},
+				Exclude: []uint{},
+			},
+		}
+		return rr.CreateRoomCharacterSettings(settings)
+	})
+	if err != nil {
 		return domain.RoomResponse{}, err
 	}
 	resRoom := domain.RoomResponse{
@@ -84,6 +111,49 @@ func (ru *roomUsecase) CreateRoom(room domain.Room) (domain.RoomResponse, error)
 		RoomName: room.RoomName,
 	}
 	return resRoom, nil
+}
+
+func (ru *roomUsecase) GetRoomCharacterSettings(roomName string) ([]domain.RoomCharacterSetting, error) {
+	room := domain.Room{}
+	if err := ru.rr.GetRoom(&room, roomName); err != nil {
+		return nil, err
+	}
+	if room.ID == 0 {
+		return nil, ErrRoomNotFound
+	}
+
+	settings := []domain.RoomCharacterSetting{}
+	if err := ru.rr.GetRoomCharacterSettings(&settings, room.ID); err != nil {
+		return nil, err
+	}
+	return settings, nil
+}
+
+// updateなので一旦return nilで実装。更新した値必要そうなら返す
+func (ru *roomUsecase) UpdateRoomCharacterSetting(
+	setting domain.RoomCharacterSetting,
+	roomName string,
+) error {
+	if setting.Team != domain.TeamA && setting.Team != domain.TeamB {
+		return ErrInvalidTeam
+	}
+
+	room := domain.Room{}
+	if err := ru.rr.GetRoom(&room, roomName); err != nil {
+		return err
+	}
+	if room.ID == 0 {
+		return ErrRoomNotFound
+	}
+
+	setting.RoomID = room.ID
+	if err := ru.rr.UpdateRoomCharacterSetting(&setting); err != nil {
+		if errors.Is(err, repository.ErrRoomCharacterSettingNotFound) {
+			return ErrRoomCharacterSettingNotFound
+		}
+		return err
+	}
+	return nil
 }
 
 func (ru *roomUsecase) DeleteRoom(roomName string) error {
