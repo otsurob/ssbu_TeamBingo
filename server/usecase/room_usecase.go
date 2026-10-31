@@ -12,6 +12,7 @@ var (
 	ErrRoomCharacterSettingNotFound = errors.New("room character setting does not exist")
 	ErrPlayerAlreadyExists          = errors.New("player already exists in the room")
 	ErrInvalidTeam                  = errors.New("invalid team")
+	ErrInvalidTeamSeparationPair    = errors.New("invalid team separation pair")
 )
 
 type IRoomUsecase interface {
@@ -292,9 +293,21 @@ func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerRespons
 			return err
 		}
 
-		newPlayers := domain.RandomTeamSepalator(players)
-		for i, v := range newPlayers {
-			v.Team = domain.Team(i % 2)
+		separationPairs := []domain.RoomPlayerSeparationPair{}
+		if len(players) > 0 {
+			if err := rr.GetRoomPlayerSeparationPairs(&separationPairs, players[0].RoomId); err != nil {
+				return err
+			}
+		}
+
+		newPlayers, err := domain.RandomTeamSeparator(players, separationPairs)
+		if err != nil {
+			if errors.Is(err, domain.ErrInvalidTeamSeparationPair) {
+				return ErrInvalidTeamSeparationPair
+			}
+			return err
+		}
+		for _, v := range newPlayers {
 			// Divide はチームだけを更新したいので、Name は空にして team 更新を選択させる
 			updateTarget := v
 			updateTarget.Name = ""

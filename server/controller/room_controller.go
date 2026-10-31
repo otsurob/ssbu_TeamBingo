@@ -223,6 +223,9 @@ func (rc *roomController) DividePlayerTeam(c echo.Context) error {
 	// }
 	playerReses, err := rc.ru.DividePlayerTeam(roomName)
 	if err != nil {
+		if errors.Is(err, usecase.ErrInvalidTeamSeparationPair) {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, playerReses)

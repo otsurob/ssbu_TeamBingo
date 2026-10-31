@@ -17,5 +17,6 @@ func main() {
 		&domain.Bingo{},
 		&domain.Cell{},
 		&domain.RoomCharacterSetting{},
+		&domain.RoomPlayerSeparationPair{},
 	)
 }

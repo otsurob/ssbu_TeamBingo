@@ -25,6 +25,7 @@ type IRoomRepository interface {
 	DeleteOnePlayer(roomName string, name string) error
 	GetRoomCharacterSettings(settings *[]domain.RoomCharacterSetting, roomID uint) error
 	UpdateRoomCharacterSetting(setting *domain.RoomCharacterSetting) error
+	GetRoomPlayerSeparationPairs(pairs *[]domain.RoomPlayerSeparationPair, roomID uint) error
 }
 
 type roomRepository struct {
@@ -79,6 +80,19 @@ func (rr *roomRepository) GetRoomCharacterSettings(
 		Where("room_id = ?", roomID).
 		Order("team").
 		Find(settings).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rr *roomRepository) GetRoomPlayerSeparationPairs(
+	pairs *[]domain.RoomPlayerSeparationPair,
+	roomID uint,
+) error {
+	if err := rr.db.
+		Where("room_id = ?", roomID).
+		Order("id").
+		Find(pairs).Error; err != nil {
 		return err
 	}
 	return nil
