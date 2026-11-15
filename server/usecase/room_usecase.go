@@ -7,11 +7,16 @@ import (
 )
 
 var (
-	ErrRoomAlreadyExists            = errors.New("room already exists")
-	ErrRoomNotFound                 = errors.New("room does not exist")
-	ErrRoomCharacterSettingNotFound = errors.New("room character setting does not exist")
-	ErrPlayerAlreadyExists          = errors.New("player already exists in the room")
-	ErrInvalidTeam                  = errors.New("invalid team")
+	ErrRoomAlreadyExists                     = errors.New("room already exists")
+	ErrRoomNotFound                          = errors.New("room does not exist")
+	ErrRoomCharacterSettingNotFound          = errors.New("room character setting does not exist")
+	ErrRoomPlayerSeparationPairNotFound      = errors.New("room player separation pair does not exist")
+	ErrRoomPlayerSeparationPairAlreadyExists = errors.New("room player separation pair already exists")
+	ErrPlayerAlreadyInSeparationPair         = errors.New("player already belongs to a separation pair")
+	ErrInvalidPlayerSeparationPair           = errors.New("invalid player separation pair")
+	ErrPlayerAlreadyExists                   = errors.New("player already exists in the room")
+	ErrInvalidTeam                           = errors.New("invalid team")
+	ErrInvalidTeamSeparationPair             = errors.New("invalid team separation pair")
 )
 
 type IRoomUsecase interface {
@@ -20,6 +25,9 @@ type IRoomUsecase interface {
 	CreateRoom(room domain.Room) (domain.RoomResponse, error)
 	GetRoomCharacterSettings(roomName string) ([]domain.RoomCharacterSetting, error)
 	UpdateRoomCharacterSetting(setting domain.RoomCharacterSetting, roomName string) error
+	GetRoomPlayerSeparationPairs(roomName string) ([]domain.RoomPlayerSeparationPair, error)
+	CreateRoomPlayerSeparationPair(pair domain.RoomPlayerSeparationPair, roomName string) (domain.RoomPlayerSeparationPair, error)
+	DeleteRoomPlayerSeparationPair(pairID uint, roomName string) error
 	DeleteRoom(roomName string) error
 	CheckRoomPassword(roomName string, password string) (bool, error)
 	GetPlayer(roomName string, name string) (domain.PlayerResponse, error)
@@ -154,6 +162,109 @@ func (ru *roomUsecase) UpdateRoomCharacterSetting(
 		return err
 	}
 	return nil
+}
+
+func (ru *roomUsecase) GetRoomPlayerSeparationPairs(
+	roomName string,
+) ([]domain.RoomPlayerSeparationPair, error) {
+	room := domain.Room{}
+	if err := ru.rr.GetRoom(&room, roomName); err != nil {
+		return nil, err
+	}
+	if room.ID == 0 {
+		return nil, ErrRoomNotFound
+	}
+
+	pairs := []domain.RoomPlayerSeparationPair{}
+	if err := ru.rr.GetRoomPlayerSeparationPairs(&pairs, room.ID); err != nil {
+		return nil, err
+	}
+	return pairs, nil
+}
+
+func (ru *roomUsecase) CreateRoomPlayerSeparationPair(
+	pair domain.RoomPlayerSeparationPair,
+	roomName string,
+) (domain.RoomPlayerSeparationPair, error) {
+	if pair.PlayerAID == 0 || pair.PlayerBID == 0 || pair.PlayerAID == pair.PlayerBID {
+		return domain.RoomPlayerSeparationPair{}, ErrInvalidPlayerSeparationPair
+	}
+	if pair.PlayerAID > pair.PlayerBID {
+		pair.PlayerAID, pair.PlayerBID = pair.PlayerBID, pair.PlayerAID
+	}
+
+	createdPair := domain.RoomPlayerSeparationPair{}
+	err := ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
+		room := domain.Room{}
+		if err := rr.GetRoomForUpdate(&room, roomName); err != nil {
+			return err
+		}
+		if room.ID == 0 {
+			return ErrRoomNotFound
+		}
+
+		players := []domain.Player{}
+		if err := rr.GetPlayers(&players, roomName); err != nil {
+			return err
+		}
+		playerIDs := make(map[uint]struct{}, len(players))
+		for _, player := range players {
+			playerIDs[player.ID] = struct{}{}
+		}
+		if _, exists := playerIDs[pair.PlayerAID]; !exists {
+			return ErrInvalidPlayerSeparationPair
+		}
+		if _, exists := playerIDs[pair.PlayerBID]; !exists {
+			return ErrInvalidPlayerSeparationPair
+		}
+
+		existingPairs := []domain.RoomPlayerSeparationPair{}
+		if err := rr.GetRoomPlayerSeparationPairs(&existingPairs, room.ID); err != nil {
+			return err
+		}
+		for _, existingPair := range existingPairs {
+			if existingPair.PlayerAID == pair.PlayerAID && existingPair.PlayerBID == pair.PlayerBID {
+				return ErrRoomPlayerSeparationPairAlreadyExists
+			}
+			if existingPair.PlayerAID == pair.PlayerAID ||
+				existingPair.PlayerBID == pair.PlayerAID ||
+				existingPair.PlayerAID == pair.PlayerBID ||
+				existingPair.PlayerBID == pair.PlayerBID {
+				return ErrPlayerAlreadyInSeparationPair
+			}
+		}
+
+		pair.RoomID = room.ID
+		if err := rr.CreateRoomPlayerSeparationPair(&pair); err != nil {
+			return err
+		}
+		createdPair = pair
+		return nil
+	})
+	if err != nil {
+		return domain.RoomPlayerSeparationPair{}, err
+	}
+	return createdPair, nil
+}
+
+func (ru *roomUsecase) DeleteRoomPlayerSeparationPair(pairID uint, roomName string) error {
+	return ru.tx.DoRoom(func(rr repository.IRoomRepository) error {
+		room := domain.Room{}
+		if err := rr.GetRoom(&room, roomName); err != nil {
+			return err
+		}
+		if room.ID == 0 {
+			return ErrRoomNotFound
+		}
+
+		if err := rr.DeleteRoomPlayerSeparationPair(pairID, room.ID); err != nil {
+			if errors.Is(err, repository.ErrRoomPlayerSeparationPairNotFound) {
+				return ErrRoomPlayerSeparationPairNotFound
+			}
+			return err
+		}
+		return nil
+	})
 }
 
 func (ru *roomUsecase) DeleteRoom(roomName string) error {
@@ -292,9 +403,21 @@ func (ru *roomUsecase) DividePlayerTeam(roomName string) ([]domain.PlayerRespons
 			return err
 		}
 
-		newPlayers := domain.RandomTeamSepalator(players)
-		for i, v := range newPlayers {
-			v.Team = domain.Team(i % 2)
+		separationPairs := []domain.RoomPlayerSeparationPair{}
+		if len(players) > 0 {
+			if err := rr.GetRoomPlayerSeparationPairs(&separationPairs, players[0].RoomId); err != nil {
+				return err
+			}
+		}
+
+		newPlayers, err := domain.RandomTeamSeparator(players, separationPairs)
+		if err != nil {
+			if errors.Is(err, domain.ErrInvalidTeamSeparationPair) {
+				return ErrInvalidTeamSeparationPair
+			}
+			return err
+		}
+		for _, v := range newPlayers {
 			// Divide はチームだけを更新したいので、Name は空にして team 更新を選択させる
 			updateTarget := v
 			updateTarget.Name = ""
