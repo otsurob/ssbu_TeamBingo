@@ -145,7 +145,11 @@ const PreGame = () => {
               onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
             />
           ) : (
-            <RoomCard name={name} onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)} />
+            <RoomCard
+              name={name}
+              players={players}
+              onToggleRoomSetting={() => setIsRoomSetting((prev) => !prev)}
+            />
           )}
           <TeamArea teamNum={0} playerNames={teamAPlayerNames} me={me} />
           <TeamArea teamNum={1} playerNames={teamBPlayerNames} me={me} />

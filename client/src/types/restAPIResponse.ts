@@ -41,3 +41,9 @@ export type RoomCharacterSetting = {
   include: number[];
   exclude: number[];
 };
+
+export type RoomPlayerSeparationPair = {
+  id: number;
+  player_a_id: number;
+  player_b_id: number;
+};

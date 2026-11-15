@@ -6,13 +6,16 @@ import { dividePlayers } from '../../../api/playerAPIs';
 import { useAppToast } from '../../../hooks/useAppToast';
 import { SettingButton } from '../../../components/CustomButton';
 import CharacterSettingDialog from './CharacterSettingDialog';
+import PlayerSeparationSettingDialog from './PlayerSeparationSettingDialog';
+import type { ResponsePlayer } from '../../../types/restAPIResponse';
 
 type RoomCardProps = {
   name: string;
+  players: ResponsePlayer[];
   onToggleRoomSetting: () => void;
 };
 
-const RoomCard = ({ name, onToggleRoomSetting }: RoomCardProps) => {
+const RoomCard = ({ name, players, onToggleRoomSetting }: RoomCardProps) => {
   const [searchParams] = useSearchParams();
   const room = searchParams.get('room');
   const navigate = useNavigate();
@@ -55,6 +58,7 @@ const RoomCard = ({ name, onToggleRoomSetting }: RoomCardProps) => {
       </CardHeader>
       <CardBody gap="5">
         <CharacterSettingDialog room={room} />
+        <PlayerSeparationSettingDialog room={room} players={players} />
         <Button onClick={startGame}>ゲーム開始</Button>
         <Button onClick={randomTeam}>ランダムチーム振り分け</Button>
         {/* <TeamSelection
