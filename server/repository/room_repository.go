@@ -10,9 +10,11 @@ import (
 )
 
 var ErrRoomCharacterSettingNotFound = errors.New("room character setting does not exist")
+var ErrRoomPlayerSeparationPairNotFound = errors.New("room player separation pair does not exist")
 
 type IRoomRepository interface {
 	GetRoom(room *domain.Room, roomName string) error
+	GetRoomForUpdate(room *domain.Room, roomName string) error
 	GetAllRooms(rooms *[]domain.Room) error
 	CreateRoom(room *domain.Room) error
 	CreateRoomCharacterSettings(settings []domain.RoomCharacterSetting) error
@@ -26,6 +28,8 @@ type IRoomRepository interface {
 	GetRoomCharacterSettings(settings *[]domain.RoomCharacterSetting, roomID uint) error
 	UpdateRoomCharacterSetting(setting *domain.RoomCharacterSetting) error
 	GetRoomPlayerSeparationPairs(pairs *[]domain.RoomPlayerSeparationPair, roomID uint) error
+	CreateRoomPlayerSeparationPair(pair *domain.RoomPlayerSeparationPair) error
+	DeleteRoomPlayerSeparationPair(pairID uint, roomID uint) error
 }
 
 type roomRepository struct {
@@ -38,6 +42,18 @@ func NewRoomRepository(db *gorm.DB) IRoomRepository {
 
 func (rr *roomRepository) GetRoom(room *domain.Room, roomName string) error {
 	if err := rr.db.Where("room_name=?", roomName).Find(room).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// 重複を防ぐために確認の段階でロックをかける
+// これがないとplayerA-B, A-Cのペアを同時に登録できてしまう？
+func (rr *roomRepository) GetRoomForUpdate(room *domain.Room, roomName string) error {
+	if err := rr.db.
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("room_name=?", roomName).
+		Find(room).Error; err != nil {
 		return err
 	}
 	return nil
@@ -94,6 +110,25 @@ func (rr *roomRepository) GetRoomPlayerSeparationPairs(
 		Order("id").
 		Find(pairs).Error; err != nil {
 		return err
+	}
+	return nil
+}
+
+func (rr *roomRepository) CreateRoomPlayerSeparationPair(
+	pair *domain.RoomPlayerSeparationPair,
+) error {
+	return rr.db.Create(pair).Error
+}
+
+func (rr *roomRepository) DeleteRoomPlayerSeparationPair(pairID uint, roomID uint) error {
+	result := rr.db.
+		Where("id = ? AND room_id = ?", pairID, roomID).
+		Delete(&domain.RoomPlayerSeparationPair{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected < 1 {
+		return ErrRoomPlayerSeparationPairNotFound
 	}
 	return nil
 }

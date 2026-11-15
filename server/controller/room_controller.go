@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"server/domain"
 	"server/usecase"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -15,6 +16,9 @@ type IRoomController interface {
 	CreateRoom(c echo.Context) error
 	GetRoomCharacterSettings(c echo.Context) error
 	UpdateRoomCharacterSetting(c echo.Context) error
+	GetRoomPlayerSeparationPairs(c echo.Context) error
+	CreateRoomPlayerSeparationPair(c echo.Context) error
+	DeleteRoomPlayerSeparationPair(c echo.Context) error
 	DeleteRoom(c echo.Context) error
 	CheckRoomPassword(c echo.Context) error
 	GetPlayer(c echo.Context) error
@@ -40,6 +44,17 @@ type roomCharacterSettingResponse struct {
 	Team    domain.Team `json:"team"`
 	Include []uint      `json:"include"`
 	Exclude []uint      `json:"exclude"`
+}
+
+type createRoomPlayerSeparationPairRequest struct {
+	PlayerAID *uint `json:"player_a_id"`
+	PlayerBID *uint `json:"player_b_id"`
+}
+
+type roomPlayerSeparationPairResponse struct {
+	ID        uint `json:"id"`
+	PlayerAID uint `json:"player_a_id"`
+	PlayerBID uint `json:"player_b_id"`
 }
 
 func NewRoomController(ru usecase.IRoomUsecase) IRoomController {
@@ -135,6 +150,82 @@ func (rc *roomController) UpdateRoomCharacterSetting(c echo.Context) error {
 		}
 	}
 
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (rc *roomController) GetRoomPlayerSeparationPairs(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	pairs, err := rc.ru.GetRoomPlayerSeparationPairs(roomName)
+	if err != nil {
+		if errors.Is(err, usecase.ErrRoomNotFound) {
+			return c.JSON(http.StatusNotFound, err.Error())
+		}
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	responses := make([]roomPlayerSeparationPairResponse, 0, len(pairs))
+	for _, pair := range pairs {
+		responses = append(responses, roomPlayerSeparationPairResponse{
+			ID:        pair.ID,
+			PlayerAID: pair.PlayerAID,
+			PlayerBID: pair.PlayerBID,
+		})
+	}
+	return c.JSON(http.StatusOK, responses)
+}
+
+func (rc *roomController) CreateRoomPlayerSeparationPair(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	request := createRoomPlayerSeparationPairRequest{}
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if request.PlayerAID == nil || request.PlayerBID == nil {
+		return c.JSON(http.StatusBadRequest, "player_a_id and player_b_id are required")
+	}
+
+	pair, err := rc.ru.CreateRoomPlayerSeparationPair(domain.RoomPlayerSeparationPair{
+		PlayerAID: *request.PlayerAID,
+		PlayerBID: *request.PlayerBID,
+	}, roomName)
+	if err != nil {
+		switch {
+		case errors.Is(err, usecase.ErrInvalidPlayerSeparationPair):
+			return c.JSON(http.StatusBadRequest, err.Error())
+		case errors.Is(err, usecase.ErrRoomPlayerSeparationPairAlreadyExists),
+			errors.Is(err, usecase.ErrPlayerAlreadyInSeparationPair):
+			return c.JSON(http.StatusConflict, err.Error())
+		case errors.Is(err, usecase.ErrRoomNotFound):
+			return c.JSON(http.StatusNotFound, err.Error())
+		default:
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.JSON(http.StatusCreated, roomPlayerSeparationPairResponse{
+		ID:        pair.ID,
+		PlayerAID: pair.PlayerAID,
+		PlayerBID: pair.PlayerBID,
+	})
+}
+
+func (rc *roomController) DeleteRoomPlayerSeparationPair(c echo.Context) error {
+	roomName := c.QueryParam("room")
+	pairIDValue := c.QueryParam("id")
+	pairID, err := strconv.ParseUint(pairIDValue, 10, 64)
+	if err != nil || pairID == 0 {
+		return c.JSON(http.StatusBadRequest, "id must be a positive integer")
+	}
+
+	if err := rc.ru.DeleteRoomPlayerSeparationPair(uint(pairID), roomName); err != nil {
+		switch {
+		case errors.Is(err, usecase.ErrRoomNotFound),
+			errors.Is(err, usecase.ErrRoomPlayerSeparationPairNotFound):
+			return c.JSON(http.StatusNotFound, err.Error())
+		default:
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
 	return c.NoContent(http.StatusNoContent)
 }
 
